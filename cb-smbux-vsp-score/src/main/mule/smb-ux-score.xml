@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json="http://www.mulesoft.org/schema/mule/json"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd">
+	<flow name="VSPScoring" doc:id="044e2f6a-4c74-416e-b1e5-68a33979090a" >
+		<http:listener doc:name="Listener" doc:id="c9c5e8b6-3cb7-4e9d-86d0-2c95ed5b1559" path="/vsp-score" config-ref="HTTP_Listener_config">
+			<http:response statusCode="#[vars.httpStatus.status default 200]" />
+			<http:error-response statusCode="#[vars.httpStatus.status default 500]">
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="65141214-3e60-46de-9f58-fee58a20cd32" message="incomingPayload: #['correlationId']"/>
+		<set-variable value="#[payload]" doc:name="Set Variable" doc:id="c1f947e7-12a8-4b03-a0d5-e8d070311f59" variableName="ApplicantInfo"/>
+		<flow-ref doc:name="cb-smb-ux-authetication-validate-flow" doc:id="0c53b1af-f87c-4fb7-96d8-069f03790a48" name="cb-smb-ux-authetication-validate-flow" target="Autheten"/>
+		<logger level="INFO" doc:name="Logger" doc:id="d8c7c5b0-4e10-475d-886c-5cd93b70b8fb" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="c623c33c-5bfe-4387-bc6d-8744def88e57" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.ApplicantInfo]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="70f60561-cd3d-4a7a-8deb-0f2c9273fb2c" >
+			<when expression='#[payload.customerType =="1" and  payload.product=="D"]'>
+				<logger level="INFO" doc:name="Logger" doc:id="d87e9ad2-af88-460b-836e-4e7da4742394" />
+				<flow-ref doc:name="SMB-UX-VSP-score-primaryApplicant" doc:id="0c55793f-0254-4054-8066-efab92226987" name="SMB-UX-VSP-score-primaryApplicant"/>
+			
+</when>
+			<when expression='#[payload.customerType =="2" and payload.product=="D"]'>
+				<logger level="INFO" doc:name="Logger" doc:id="8260949a-ee6a-4e7e-a038-b4e3b40c58bb" />
+				<flow-ref doc:name="smb-ux-busines-debit-flow" doc:id="15728ee9-079e-4ae9-b957-ddbe320fde5f" name="smb-ux-busines-debit-flow"/>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="c981317f-3b92-46c6-922d-88cd2abca7a8" />
+				<raise-error doc:name="Raise error" doc:id="2f85640a-3314-4899-86c3-f5ed16b1df07" type="VSP:APPLICANT"/>
+				<ee:transform doc:name="Transform Message" doc:id="928e7d63-0c2d-4e2a-a8ac-63a5dafdd0d7" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{ "metadata":{
+	"status": 407,
+	"message": "Product or Customer Type not found"
+}
+	
+} ]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			
+</otherwise>
+		
+</choice>
+	</flow>
+	
+
+
+</mule>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="SMB-UX-VSP-loginFlow" doc:id="c991326d-0649-4c83-98ec-3904b51cd78f" >
+		<http:listener doc:name="Listener" doc:id="3c5cdf04-921c-4a85-bda5-3a1623cdd75e" path="/token" config-ref="HTTP_Listener_config"/>
+		<validation:is-not-null doc:name="Is not null" doc:id="af087dfd-b64a-4fe3-8884-8c27db2780c6" value="#[payload]"/>
+		<set-variable value='#[(now()&gt;&gt; "UTC") as Number]' doc:name="Set Variable" doc:id="0f08cd6e-e129-47a2-ba2e-9a0b4907269e" variableName="Now"/>
+		<os:retrieve doc:name="Retrieve" doc:id="62a772b8-e0b3-4943-823f-f374d1d7d50f" key="AcessToken" objectStore="SMB-ux-vsp-token-object-store">
+			<os:default-value ><![CDATA[#[output application/json
+---	
+{
+	"Access_token": null,
+	"Expire_in": 0
+}]]]></os:default-value>
+		</os:retrieve>
+		<choice doc:name="Choice" doc:id="fbc23670-da76-4981-bfdd-33184e163e20" >
+			<when expression="#[payload.Access_token == null or payload.Expire_in== 0]">
+				<http:request method="POST" doc:name="Request" doc:id="ce8951d3-8962-438e-a7c8-d028d811ad9f" path="/tokens" config-ref="HTTP_Request_VSP_configuration">
+					<http:body ><![CDATA[#[%dw 2.0
+output application/json
+---
+
+{
+	"tenantId": p('VSP.tenantId'),
+	"tenantSecret": p('VSP.tenantSecret')
+}]]]></http:body>
+				</http:request>
+				<os:store doc:name="Store" doc:id="a1bbc32b-3dda-46bb-8282-4de495a8adce" key="AcessToken" objectStore="SMB-ux-vsp-token-object-store">
+					<os:value ><![CDATA[#[output application/json
+---	
+{
+	"Access_token": payload.access_token,
+	"Expire_in": vars.Now + payload.expires_in 
+}]]]></os:value>
+				</os:store>
+				<set-variable value="#[payload.access_token]" doc:name="Set Variable" doc:id="1d0747fd-6861-42fd-925b-41197a05d0af" variableName="authorize"/>
+			
+</when>
+			<otherwise >
+				<set-variable value="#[payload.Access_token]" doc:name="set variable " doc:id="9880d941-7d73-4a7e-bc36-410b8879c2a6" variableName="authorize" />
+			
+</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="d7123a18-cb0c-4bc8-b814-619b80a31e52" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+ vars.authorize]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	
+</flow>
+</mule>

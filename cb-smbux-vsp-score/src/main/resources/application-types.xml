@@ -1,0 +1,183 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="vspInput" format="json">
+      <types:shape format="weave" example="examples/vsp.json"><![CDATA[%dw 2.0
+
+type vspInput = {|
+  LastModifiedDate: String, 
+  Expiration_Date__c: String, 
+  Readaccept_the_Account_TermsConditions__c: Null, 
+  Occupation_Details__c: String, 
+  Birth_Date__c: String, 
+  Send_or_receive_Domestic_Wires__c: String, 
+  "type": String, 
+  VSP_Model_Business__c: Null, 
+  Occupation__c: String, 
+  Factors_Business__c: Null, 
+  Authorized_ownersignerrepresentative__c: Null, 
+  City__c: String, 
+  Business_Address_2__c: String, 
+  Repayment_source__c: String, 
+  Business_State__c: String, 
+  State__c: String, 
+  Total_Amount_of_Monthly_Cash_Withdrawals__c: String, 
+  IsDeleted: String, 
+  Type_of_Business__c: String, 
+  ID_Number__c: String, 
+  State_of_Registration__c: String, 
+  Score_Business__c: Null, 
+  Application_Status__c: String, 
+  Number_of_Outgoing_Domestic_Wires__c: String, 
+  Action__c: Null, 
+  Title__c: String, 
+  Full_Name__c: String, 
+  IP_Address__c: String, 
+  Mothers_Maiden_Name__c: String, 
+  Id: String, 
+  Score__c: Null, 
+  VSP_URL__c: Null, 
+  Decision_Description__c: Null, 
+  DBA_Name__c: String, 
+  VSP_Model__c: Null, 
+  VSP_Result__c: Null, 
+  Total_of_Deposits_Youl_Make_Monthly__c: String, 
+  VSP_ID__c: Null, 
+  Factors__c: Null, 
+  VSP_URL_Business__c: Null, 
+  Address_1__c: String, 
+  Do_you_expect_cash_transactions__c: String, 
+  OwnerId: String, 
+  Read_the_Electronic_Signature_Consent__c: Null, 
+  VSP_Status_Business__c: Null, 
+  Readaccept_Electronic_SignatureConsent__c: Null, 
+  Receive_Statements_Electronically__c: String, 
+  Profile_Date_Business__c: Null, 
+  Role__c: String, 
+  Decision_Description_Business__c: Null, 
+  SystemModstamp: String, 
+  NAICS_Code__c: String, 
+  Issued_Date__c: String, 
+  Risk_Class_Business__c: Null, 
+  Zip__c: String, 
+  Number_of_Outgoing_Foreign_Wires__c: String, 
+  Name_of_Business__c: String, 
+  Primary_Business_Function__c: String, 
+  LastActivityDate: Null, 
+  File_Establish_Date_Business__c: Null, 
+  Filling_this_out_for_the_account_owner__c: Null, 
+  VSP_Business__c: Null, 
+  Total_of_Incoming_Domestic_Wires__c: String, 
+  Decision_Code_Business__c: Null, 
+  Number_of_Incoming_Foreign_Wires__c: String, 
+  ACH_Limit__c: String, 
+  Decision_Code__c: Null, 
+  Industry__c: Null, 
+  Name: String, 
+  Total_of_Outgoing_Foreign_Wires__c: String, 
+  CreatedById: String, 
+  Total_of_Incoming_Foreign_Wires__c: String, 
+  Business_Tax_ID_Type__c: String, 
+  Principal_Place_of_Business__c: String, 
+  ID_State__c: String, 
+  Action_Business__c: Null, 
+  Gross_annual_revenue_in_previous_FY_1M__c: String, 
+  Business_City__c: String, 
+  VSP_Primary_Applicant__c: Null, 
+  LastViewedDate: Null, 
+  Total_of_Outgoing_Domestic_Wires__c: String, 
+  SMS__c: String, 
+  Application_Number__c: String, 
+  Percentage_of_Ownership__c: String, 
+  Business_Address_1__c: String, 
+  Risk_Class__c: Null, 
+  Social_Security_Number__c: String, 
+  Number_of_Monthly_Cash_Deposits__c: String, 
+  CreatedDate: String, 
+  First_Name__c: String, 
+  Profile_Date__c: Null, 
+  Business_Email__c: String, 
+  Originatesend_payments_via_ACH__c: String, 
+  Email__c: String, 
+  Last_Name__c: String, 
+  Read_and_accept_the_Account_Terms_Cond__c: Null, 
+  Do_you_expect_to_receive_ACH_Payments__c: String, 
+  VSP_Status_Primary_Applicant__c: Null, 
+  Business_Relationship__c: Null, 
+  ID_Type__c: String, 
+  LastReferencedDate: Null, 
+  Amount_of_loan_requested__c: String, 
+  Purpose_of_Account__c: String, 
+  US_Citizen__c: String, 
+  File_Establish_Date__c: Null, 
+  Send_receive_Foreign_Internatial_Wires__c: String, 
+  Total_Amount_of_Monthly_Cash_Deposits__c: String, 
+  Purpose_of_loan__c: String, 
+  Business_Zip__c: String, 
+  Profile_Time__c: Null, 
+  Primary_Applicant_Relationship__c: Null, 
+  Address_2__c: Null, 
+  Readaccept_the_Privacy_Policy__c: Null, 
+  Date_of_Registration__c: String, 
+  Profile_Time_Business__c: Null, 
+  Phone__c: String, 
+  Business_Phone__c: String, 
+  Middle_Name__c: Null, 
+  Number_of_Incoming_Domestic_Wires__c: String, 
+  Account_Activity__c: String, 
+  Number_of_Deposits_Youll_Make_Monthly__c: String, 
+  LastModifiedById: String, 
+  EIN__c: String, 
+  Financial_Account__c: Null
+|} {"example": "{\\\"LastModifiedDate\\\":\\\"2022-03-18T12:59:35.000Z\\\",\\\"Expiration_Date__c\\\":\\\"2025-03-01\\\",\\\"Readaccept_the_Account_TermsConditions__c\\\":null,\\\"Occupation_Details__c\\\":\\\"Various\\\",\\\"Birth_Date__c\\\":\\\"2000-03-01\\\",\\\"Send_or_receive_Domestic_Wires__c\\\":\\\"Yes\\\",\\\"type\\\":\\\"Application__c\\\",\\\"VSP_Model_Business__c\\\":null,\\\"Occupation__c\\\":\\\"012\\\",\\\"Factors_Business__c\\\":null,\\\"Authorized_ownersignerrepresentative__c\\\":null,\\\"City__c\\\":\\\"Phoenixville\\\",\\\"Business_Address_2__c\\\":\\\"Suite 400\\\",\\\"Repayment_source__c\\\":\\\"Revenue\\\",\\\"Business_State__c\\\":\\\"Pennsylvania\\\",\\\"State__c\\\":\\\"Pennsylvania\\\",\\\"Total_Amount_of_Monthly_Cash_Withdrawals__c\\\":\\\"15000.0\\\",\\\"IsDeleted\\\":\\\"false\\\",\\\"Type_of_Business__c\\\":\\\"Corporation\\\",\\\"ID_Number__c\\\":\\\"123234567\\\",\\\"State_of_Registration__c\\\":\\\"Pennsylvania\\\",\\\"Score_Business__c\\\":null,\\\"Application_Status__c\\\":\\\"In Progress\\\",\\\"Number_of_Outgoing_Domestic_Wires__c\\\":\\\"3.0\\\",\\\"Action__c\\\":null,\\\"Title__c\\\":\\\"Mr.\\\",\\\"Full_Name__c\\\":\\\"William  Hagarty\\\",\\\"IP_Address__c\\\":\\\"8.8.8.8\\\",\\\"Mothers_Maiden_Name__c\\\":\\\"Smith\\\",\\\"Id\\\":\\\"a865300000000kTAAQ\\\",\\\"Score__c\\\":null,\\\"VSP_URL__c\\\":null,\\\"Decision_Description__c\\\":null,\\\"DBA_Name__c\\\":\\\"My DBA\\\",\\\"VSP_Model__c\\\":null,\\\"VSP_Result__c\\\":null,\\\"Total_of_Deposits_Youl_Make_Monthly__c\\\":\\\"10000.0\\\",\\\"VSP_ID__c\\\":null,\\\"Factors__c\\\":null,\\\"VSP_URL_Business__c\\\":null,\\\"Address_1__c\\\":\\\"99 Bridge Street\\\",\\\"Do_you_expect_cash_transactions__c\\\":\\\"Yes\\\",\\\"OwnerId\\\":\\\"0051J000006gWAjQAM\\\",\\\"Read_the_Electronic_Signature_Consent__c\\\":null,\\\"VSP_Status_Business__c\\\":null,\\\"Readaccept_Electronic_SignatureConsent__c\\\":null,\\\"Receive_Statements_Electronically__c\\\":\\\"Yes\\\",\\\"Profile_Date_Business__c\\\":null,\\\"Role__c\\\":\\\"Signer\\\",\\\"Decision_Description_Business__c\\\":null,\\\"SystemModstamp\\\":\\\"2022-03-18T12:59:35.000Z\\\",\\\"NAICS_Code__c\\\":\\\"34232\\\",\\\"Issued_Date__c\\\":\\\"2022-03-01\\\",\\\"Risk_Class_Business__c\\\":null,\\\"Zip__c\\\":\\\"19460\\\",\\\"Number_of_Outgoing_Foreign_Wires__c\\\":\\\"13000.0\\\",\\\"Name_of_Business__c\\\":\\\"ABC Inc\\\",\\\"Primary_Business_Function__c\\\":\\\"Financial Services\\\",\\\"LastActivityDate\\\":null,\\\"File_Establish_Date_Business__c\\\":null,\\\"Filling_this_out_for_the_account_owner__c\\\":null,\\\"VSP_Business__c\\\":null,\\\"Total_of_Incoming_Domestic_Wires__c\\\":\\\"23000.0\\\",\\\"Decision_Code_Business__c\\\":null,\\\"Number_of_Incoming_Foreign_Wires__c\\\":\\\"2.0\\\",\\\"ACH_Limit__c\\\":\\\"We are reviewing your request and may require additional information.\\\",\\\"Decision_Code__c\\\":null,\\\"Industry__c\\\":null,\\\"Name\\\":\\\"ABC Inc-Hagarty\\\",\\\"Total_of_Outgoing_Foreign_Wires__c\\\":\\\"28000.0\\\",\\\"CreatedById\\\":\\\"0051J000006gWAjQAM\\\",\\\"Total_of_Incoming_Foreign_Wires__c\\\":\\\"12000.0\\\",\\\"Business_Tax_ID_Type__c\\\":\\\"345455678\\\",\\\"Principal_Place_of_Business__c\\\":\\\"Pennsylvania\\\",\\\"ID_State__c\\\":\\\"Pennsylvania\\\",\\\"Action_Business__c\\\":null,\\\"Gross_annual_revenue_in_previous_FY_1M__c\\\":\\\"No\\\",\\\"Business_City__c\\\":\\\"Phoenixville\\\",\\\"VSP_Primary_Applicant__c\\\":null,\\\"LastViewedDate\\\":null,\\\"Total_of_Outgoing_Domestic_Wires__c\\\":\\\"24000.0\\\",\\\"SMS__c\\\":\\\"6105551111\\\",\\\"Application_Number__c\\\":\\\"A-0000000001\\\",\\\"Percentage_of_Ownership__c\\\":\\\"25.0\\\",\\\"Business_Address_1__c\\\":\\\"100 Bridge St.\\\",\\\"Risk_Class__c\\\":null,\\\"Social_Security_Number__c\\\":\\\"111-22-3333\\\",\\\"Number_of_Monthly_Cash_Deposits__c\\\":\\\"4.0\\\",\\\"CreatedDate\\\":\\\"2022-03-04T20:55:09.000Z\\\",\\\"First_Name__c\\\":\\\"William\\\",\\\"Profile_Date__c\\\":null,\\\"Business_Email__c\\\":\\\"support@abc.com\\\",\\\"Originatesend_payments_via_ACH__c\\\":\\\"Yes\\\",\\\"Email__c\\\":\\\"bhagarty@abcinc.com\\\",\\\"Last_Name__c\\\":\\\"Hagarty\\\",\\\"Read_and_accept_the_Account_Terms_Cond__c\\\":null,\\\"Do_you_expect_to_receive_ACH_Payments__c\\\":\\\"Yes\\\",\\\"VSP_Status_Primary_Applicant__c\\\":null,\\\"Business_Relationship__c\\\":null,\\\"ID_Type__c\\\":\\\"Driver's License\\\",\\\"LastReferencedDate\\\":null,\\\"Amount_of_loan_requested__c\\\":\\\"18000.0\\\",\\\"Purpose_of_Account__c\\\":\\\"Payroll\\\",\\\"US_Citizen__c\\\":\\\"Yes\\\",\\\"File_Establish_Date__c\\\":null,\\\"Send_receive_Foreign_Internatial_Wires__c\\\":\\\"Yes\\\",\\\"Total_Amount_of_Monthly_Cash_Deposits__c\\\":\\\"20000.0\\\",\\\"Purpose_of_loan__c\\\":\\\"U - Working Capital\\\",\\\"Business_Zip__c\\\":\\\"19460\\\",\\\"Profile_Time__c\\\":null,\\\"Primary_Applicant_Relationship__c\\\":null,\\\"Address_2__c\\\":null,\\\"Readaccept_the_Privacy_Policy__c\\\":null,\\\"Date_of_Registration__c\\\":\\\"2022-02-01\\\",\\\"Profile_Time_Business__c\\\":null,\\\"Phone__c\\\":\\\"610-111-1111\\\",\\\"Business_Phone__c\\\":\\\"6104445555\\\",\\\"Middle_Name__c\\\":null,\\\"Number_of_Incoming_Domestic_Wires__c\\\":\\\"8.0\\\",\\\"Account_Activity__c\\\":\\\"Loan\\/Finance\\\",\\\"Number_of_Deposits_Youll_Make_Monthly__c\\\":\\\"4.0\\\",\\\"LastModifiedById\\\":\\\"0051J000006gWAjQAM\\\",\\\"EIN__c\\\":\\\"345455679\\\",\\\"Financial_Account__c\\\":null}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="vspArray" format="json">
+      <types:shape format="weave" example="examples/vspArray.json"><![CDATA[%dw 2.0
+
+type vspArray = Array<{|  LastModifiedDate: String,   Expiration_Date__c: String,   Readaccept_the_Account_TermsConditions__c: Null,   Occupation_Details__c: String,   Birth_Date__c: String,   Send_or_receive_Domestic_Wires__c: String,   "type": String,   VSP_Model_Business__c: Null,   Occupation__c: String,   Factors_Business__c: Null,   Authorized_ownersignerrepresentative__c: Null,   City__c: String,   Business_Address_2__c: String,   Repayment_source__c: String,   Business_State__c: String,   State__c: String,   Total_Amount_of_Monthly_Cash_Withdrawals__c: String,   IsDeleted: String,   Type_of_Business__c: String,   ID_Number__c: String,   State_of_Registration__c: String,   Score_Business__c: Null,   Application_Status__c: String,   Number_of_Outgoing_Domestic_Wires__c: String,   Action__c: Null,   Title__c: String,   Full_Name__c: String,   IP_Address__c: String,   Mothers_Maiden_Name__c: String,   Id: String,   Score__c: Null,   VSP_URL__c: Null,   Decision_Description__c: Null,   DBA_Name__c: String,   VSP_Model__c: Null,   VSP_Result__c: Null,   Total_of_Deposits_Youl_Make_Monthly__c: String,   VSP_ID__c: Null,   Factors__c: Null,   VSP_URL_Business__c: Null,   Address_1__c: String,   Do_you_expect_cash_transactions__c: String,   OwnerId: String,   Read_the_Electronic_Signature_Consent__c: Null,   VSP_Status_Business__c: Null,   Readaccept_Electronic_SignatureConsent__c: Null,   Receive_Statements_Electronically__c: String,   Profile_Date_Business__c: Null,   Role__c: String,   Decision_Description_Business__c: Null,   SystemModstamp: String,   NAICS_Code__c: String,   Issued_Date__c: String,   Risk_Class_Business__c: Null,   Zip__c: String,   Number_of_Outgoing_Foreign_Wires__c: String,   Name_of_Business__c: String,   Primary_Business_Function__c: String,   LastActivityDate: Null,   File_Establish_Date_Business__c: Null,   Filling_this_out_for_the_account_owner__c: Null,   VSP_Business__c: Null,   Total_of_Incoming_Domestic_Wires__c: String,   Decision_Code_Business__c: Null,   Number_of_Incoming_Foreign_Wires__c: String,   ACH_Limit__c: String,   Decision_Code__c: Null,   Industry__c: Null,   Name: String,   Total_of_Outgoing_Foreign_Wires__c: String,   CreatedById: String,   Total_of_Incoming_Foreign_Wires__c: String,   Business_Tax_ID_Type__c: String,   Principal_Place_of_Business__c: String,   ID_State__c: String,   Action_Business__c: Null,   Gross_annual_revenue_in_previous_FY_1M__c: String,   Business_City__c: String,   VSP_Primary_Applicant__c: Null,   LastViewedDate: Null,   Total_of_Outgoing_Domestic_Wires__c: String,   SMS__c: String,   Application_Number__c: String,   Percentage_of_Ownership__c: String,   Business_Address_1__c: String,   Risk_Class__c: Null,   Social_Security_Number__c: String,   Number_of_Monthly_Cash_Deposits__c: String,   CreatedDate: String,   First_Name__c: String,   Profile_Date__c: Null,   Business_Email__c: String,   Originatesend_payments_via_ACH__c: String,   Email__c: String,   Last_Name__c: String,   Read_and_accept_the_Account_Terms_Cond__c: Null,   Do_you_expect_to_receive_ACH_Payments__c: String,   VSP_Status_Primary_Applicant__c: Null,   Business_Relationship__c: Null,   ID_Type__c: String,   LastReferencedDate: Null,   Amount_of_loan_requested__c: String,   Purpose_of_Account__c: String,   US_Citizen__c: String,   File_Establish_Date__c: Null,   Send_receive_Foreign_Internatial_Wires__c: String,   Total_Amount_of_Monthly_Cash_Deposits__c: String,   Purpose_of_loan__c: String,   Business_Zip__c: String,   Profile_Time__c: Null,   Primary_Applicant_Relationship__c: Null,   Address_2__c: Null,   Readaccept_the_Privacy_Policy__c: Null,   Date_of_Registration__c: String,   Profile_Time_Business__c: Null,   Phone__c: String,   Business_Phone__c: String,   Middle_Name__c: Null,   Number_of_Incoming_Domestic_Wires__c: String,   Account_Activity__c: String,   Number_of_Deposits_Youll_Make_Monthly__c: String,   LastModifiedById: String,   EIN__c: String,   Financial_Account__c: Null|}> {"example": "[{\\\"LastModifiedDate\\\":\\\"2022-03-18T12:59:35.000Z\\\",\\\"Expiration_Date__c\\\":\\\"2025-03-01\\\",\\\"Readaccept_the_Account_TermsConditions__c\\\":null,\\\"Occupation_Details__c\\\":\\\"Various\\\",\\\"Birth_Date__c\\\":\\\"2000-03-01\\\",\\\"Send_or_receive_Domestic_Wires__c\\\":\\\"Yes\\\",\\\"type\\\":\\\"Application__c\\\",\\\"VSP_Model_Business__c\\\":null,\\\"Occupation__c\\\":\\\"012\\\",\\\"Factors_Business__c\\\":null,\\\"Authorized_ownersignerrepresentative__c\\\":null,\\\"City__c\\\":\\\"Phoenixville\\\",\\\"Business_Address_2__c\\\":\\\"Suite 400\\\",\\\"Repayment_source__c\\\":\\\"Revenue\\\",\\\"Business_State__c\\\":\\\"Pennsylvania\\\",\\\"State__c\\\":\\\"Pennsylvania\\\",\\\"Total_Amount_of_Monthly_Cash_Withdrawals__c\\\":\\\"15000.0\\\",\\\"IsDeleted\\\":\\\"false\\\",\\\"Type_of_Business__c\\\":\\\"Corporation\\\",\\\"ID_Number__c\\\":\\\"123234567\\\",\\\"State_of_Registration__c\\\":\\\"Pennsylvania\\\",\\\"Score_Business__c\\\":null,\\\"Application_Status__c\\\":\\\"In Progress\\\",\\\"Number_of_Outgoing_Domestic_Wires__c\\\":\\\"3.0\\\",\\\"Action__c\\\":null,\\\"Title__c\\\":\\\"Mr.\\\",\\\"Full_Name__c\\\":\\\"William  Hagarty\\\",\\\"IP_Address__c\\\":\\\"8.8.8.8\\\",\\\"Mothers_Maiden_Name__c\\\":\\\"Smith\\\",\\\"Id\\\":\\\"a865300000000kTAAQ\\\",\\\"Score__c\\\":null,\\\"VSP_URL__c\\\":null,\\\"Decision_Description__c\\\":null,\\\"DBA_Name__c\\\":\\\"My DBA\\\",\\\"VSP_Model__c\\\":null,\\\"VSP_Result__c\\\":null,\\\"Total_of_Deposits_Youl_Make_Monthly__c\\\":\\\"10000.0\\\",\\\"VSP_ID__c\\\":null,\\\"Factors__c\\\":null,\\\"VSP_URL_Business__c\\\":null,\\\"Address_1__c\\\":\\\"99 Bridge Street\\\",\\\"Do_you_expect_cash_transactions__c\\\":\\\"Yes\\\",\\\"OwnerId\\\":\\\"0051J000006gWAjQAM\\\",\\\"Read_the_Electronic_Signature_Consent__c\\\":null,\\\"VSP_Status_Business__c\\\":null,\\\"Readaccept_Electronic_SignatureConsent__c\\\":null,\\\"Receive_Statements_Electronically__c\\\":\\\"Yes\\\",\\\"Profile_Date_Business__c\\\":null,\\\"Role__c\\\":\\\"Signer\\\",\\\"Decision_Description_Business__c\\\":null,\\\"SystemModstamp\\\":\\\"2022-03-18T12:59:35.000Z\\\",\\\"NAICS_Code__c\\\":\\\"34232\\\",\\\"Issued_Date__c\\\":\\\"2022-03-01\\\",\\\"Risk_Class_Business__c\\\":null,\\\"Zip__c\\\":\\\"19460\\\",\\\"Number_of_Outgoing_Foreign_Wires__c\\\":\\\"13000.0\\\",\\\"Name_of_Business__c\\\":\\\"ABC Inc\\\",\\\"Primary_Business_Function__c\\\":\\\"Financial Services\\\",\\\"LastActivityDate\\\":null,\\\"File_Establish_Date_Business__c\\\":null,\\\"Filling_this_out_for_the_account_owner__c\\\":null,\\\"VSP_Business__c\\\":null,\\\"Total_of_Incoming_Domestic_Wires__c\\\":\\\"23000.0\\\",\\\"Decision_Code_Business__c\\\":null,\\\"Number_of_Incoming_Foreign_Wires__c\\\":\\\"2.0\\\",\\\"ACH_Limit__c\\\":\\\"We are reviewing your request and may require additional information.\\\",\\\"Decision_Code__c\\\":null,\\\"Industry__c\\\":null,\\\"Name\\\":\\\"ABC Inc-Hagarty\\\",\\\"Total_of_Outgoing_Foreign_Wires__c\\\":\\\"28000.0\\\",\\\"CreatedById\\\":\\\"0051J000006gWAjQAM\\\",\\\"Total_of_Incoming_Foreign_Wires__c\\\":\\\"12000.0\\\",\\\"Business_Tax_ID_Type__c\\\":\\\"345455678\\\",\\\"Principal_Place_of_Business__c\\\":\\\"Pennsylvania\\\",\\\"ID_State__c\\\":\\\"Pennsylvania\\\",\\\"Action_Business__c\\\":null,\\\"Gross_annual_revenue_in_previous_FY_1M__c\\\":\\\"No\\\",\\\"Business_City__c\\\":\\\"Phoenixville\\\",\\\"VSP_Primary_Applicant__c\\\":null,\\\"LastViewedDate\\\":null,\\\"Total_of_Outgoing_Domestic_Wires__c\\\":\\\"24000.0\\\",\\\"SMS__c\\\":\\\"6105551111\\\",\\\"Application_Number__c\\\":\\\"A-0000000001\\\",\\\"Percentage_of_Ownership__c\\\":\\\"25.0\\\",\\\"Business_Address_1__c\\\":\\\"100 Bridge St.\\\",\\\"Risk_Class__c\\\":null,\\\"Social_Security_Number__c\\\":\\\"111-22-3333\\\",\\\"Number_of_Monthly_Cash_Deposits__c\\\":\\\"4.0\\\",\\\"CreatedDate\\\":\\\"2022-03-04T20:55:09.000Z\\\",\\\"First_Name__c\\\":\\\"William\\\",\\\"Profile_Date__c\\\":null,\\\"Business_Email__c\\\":\\\"support@abc.com\\\",\\\"Originatesend_payments_via_ACH__c\\\":\\\"Yes\\\",\\\"Email__c\\\":\\\"bhagarty@abcinc.com\\\",\\\"Last_Name__c\\\":\\\"Hagarty\\\",\\\"Read_and_accept_the_Account_Terms_Cond__c\\\":null,\\\"Do_you_expect_to_receive_ACH_Payments__c\\\":\\\"Yes\\\",\\\"VSP_Status_Primary_Applicant__c\\\":null,\\\"Business_Relationship__c\\\":null,\\\"ID_Type__c\\\":\\\"Driver's License\\\",\\\"LastReferencedDate\\\":null,\\\"Amount_of_loan_requested__c\\\":\\\"18000.0\\\",\\\"Purpose_of_Account__c\\\":\\\"Payroll\\\",\\\"US_Citizen__c\\\":\\\"Yes\\\",\\\"File_Establish_Date__c\\\":null,\\\"Send_receive_Foreign_Internatial_Wires__c\\\":\\\"Yes\\\",\\\"Total_Amount_of_Monthly_Cash_Deposits__c\\\":\\\"20000.0\\\",\\\"Purpose_of_loan__c\\\":\\\"U - Working Capital\\\",\\\"Business_Zip__c\\\":\\\"19460\\\",\\\"Profile_Time__c\\\":null,\\\"Primary_Applicant_Relationship__c\\\":null,\\\"Address_2__c\\\":null,\\\"Readaccept_the_Privacy_Policy__c\\\":null,\\\"Date_of_Registration__c\\\":\\\"2022-02-01\\\",\\\"Profile_Time_Business__c\\\":null,\\\"Phone__c\\\":\\\"610-111-1111\\\",\\\"Business_Phone__c\\\":\\\"6104445555\\\",\\\"Middle_Name__c\\\":null,\\\"Number_of_Incoming_Domestic_Wires__c\\\":\\\"8.0\\\",\\\"Account_Activity__c\\\":\\\"Loan\\/Finance\\\",\\\"Number_of_Deposits_Youll_Make_Monthly__c\\\":\\\"4.0\\\",\\\"LastModifiedById\\\":\\\"0051J000006gWAjQAM\\\",\\\"EIN__c\\\":\\\"345455679\\\",\\\"Financial_Account__c\\\":null}]"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#2e686131-627d-416e-93e8-bf1168727838"/>
+  <types:enrichment select="#5b692d8a-c0a8-4302-9bef-fa3f9e0fa635">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="vspArray"/>
+          <types:attributes type="vspInput"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#786a0c98-72ed-4bdf-9d37-a6b3ba9b01f0"/>
+  <types:enrichment select="#331107ff-a69a-4dac-bb66-cb6a638eb0ee">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="vspArray"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#768d84d8-64d9-496c-82bc-ccfbdf6bc419">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="vspArray"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#64333c00-6a84-4c89-8064-e5d755be9b07">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="vspArray"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

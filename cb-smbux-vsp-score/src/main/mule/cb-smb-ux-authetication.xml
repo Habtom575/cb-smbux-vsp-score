@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="cb-smb-ux-authetication-login-flow" doc:id="aea8096e-1b34-4ffa-aeec-a9ec2a15dee9" >
+		<http:listener doc:name="Listener" doc:id="7f6c5bc2-5f70-4ac3-935e-6301817ae4bd" path="/auth" config-ref="HTTP_Listener_config">
+			<http:response statusCode="#[vars.httpStatus.status default 200]" />
+			<http:error-response statusCode="#[vars.httpStatus.status default 500]">
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="27745295-ba21-4a76-8f53-16628f41a4e8" message="#[correlationId]"/>
+		<http:request method="GET" doc:name="Request" doc:id="7b04ec91-bb1b-430c-b50f-f1e0ac7679de" config-ref="HTTP_Request_auth_configuration" path="${cb_auth.path}">
+			<http:headers ><![CDATA[#[{
+"username" : attributes.headers.username,
+"password" : attributes.headers.password,
+"UUID" : attributes.headers.UUID,
+"client_id" : attributes.headers.client_id,
+"client_secret" : attributes.headers.client_secret,
+"source": attributes.headers.source
+}]]]></http:headers>
+		</http:request>
+		<ee:transform doc:name="Transform Message" doc:id="2e686131-627d-416e-93e8-bf1168727838" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="loginPayload" ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<error-handler ref="global_configError_Handler" />
+	</flow>
+	<flow name="cb-smb-ux-authetication-validate-flow" doc:id="74290671-5e16-41a6-a8ed-5555954735f9" >
+	<set-variable value="#[attributes.headers.source]" doc:name="Set Variable" doc:id="6490d5de-c561-484e-a0be-1a65413ec989" variableName="source"/>
+		<set-variable value='#[attributes.headers.token]' doc:name="token" doc:id="da59164a-ed8c-4de9-8c82-a97dbbb1ec37" variableName="token"/>
+<http:request method="GET" doc:name="Token Validation Request" doc:id="458986a9-defe-4a0a-85d1-7c1258e0cb44" config-ref="HTTP_Request_auth_configuration" path="/token-validation">
+<http:body ><![CDATA[payload]]></http:body>
+			<http:headers><![CDATA[#[output application/json
+---
+{
+"client_id" : p('cb_auth.clientId'),
+"client_secret" : p('cb_auth.clientSecret'),
+"token": vars.token,
+"source": vars.source,
+"time": now() as DateTime
+}]]]></http:headers>
+</http:request>
+		<error-handler ref="global_configError_Handler" />
+</flow>
+	
+</mule>

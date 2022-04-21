@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="0635ef8c-bd1d-4766-a409-dfddd2522d1d" file="${env}.secureSmbux.yaml" key="keys@customersBank" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="c4307684-3d5b-491a-9f0a-04bf7a541015" >
+		<salesforce:basic-connection username="${SF.user}" password="${secure::SF.password}" securityToken="${SF.token}" url="${SF.url}" />
+	</salesforce:sfdc-config>
+	<configuration doc:name="Configuration" doc:id="f37a6b7f-5fb1-4444-b9bf-7c670f590f49" defaultErrorHandler-ref="global_configError_Handler" />
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="69c526c3-cbfe-4848-a431-86f73af454f4" >
+		<http:listener-connection host="${httpListner.host}" port="${httpListner.port}" protocol="HTTPS">
+			<tls:context >
+				<tls:trust-store insecure="true" />
+				<tls:key-store type="jks" path="keystore.jks" keyPassword="password" password="password" />
+			</tls:context>
+		</http:listener-connection>
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_VSP_configuration" doc:name="HTTP Request configuration" doc:id="3c3ff03e-287b-453f-bc57-1815a9d8306c" basePath="/v2" >
+		<http:request-connection host="${VSP.url}" protocol="HTTPS"/>
+	</http:request-config>
+	<os:object-store name="SMB-ux-vsp-token-object-store" doc:name="Object store" doc:id="a899685b-fcf4-4186-8d6b-d6cb99d2d161" entryTtl="1" entryTtlUnit="MINUTES" />
+	<configuration-properties doc:name="Configuration properties" doc:id="3277a1b3-37d3-4d15-abf7-9ab545f79ae9" file="${env}.smbux.yaml" />
+	<global-property doc:name="Global Property" doc:id="8c7d8ba4-e8bc-47c2-be2b-d9a3b4387ffd" name="env" value="dev" />
+	<http:request-config name="HTTP_Request_auth_configuration" doc:name="HTTP Request configuration" doc:id="32486670-2697-41a6-a35a-4d195e722c83" basePath="/${cb_auth.base}">
+		<http:request-connection protocol="HTTPS" host="${cb_auth.host}" port="${cb_auth.port}" >
+			<tls:context >
+				<tls:trust-store insecure="true" />
+			</tls:context>
+		</http:request-connection>
+	</http:request-config>
+	<error-handler name="global_configError_Handler" doc:id="e5ab6316-a3fd-41fa-be84-ced3b5a7cce1" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="99705648-5309-4c82-9cff-e458948d21a7" >
+			<flow-ref doc:name="global_config-sub_Flow" doc:id="f95a5b92-0a28-41c6-be2e-cefddc877610" name="global_config-sub_Flow"/>
+		</on-error-propagate>
+	</error-handler>
+	<sub-flow name="global_config-sub_Flow" doc:id="5ceb7400-9da8-4ae3-b59e-8fb8b3f7ada7" >
+		<ee:transform doc:name="Transform Message" doc:id="86dc91b9-da3f-4492-80cc-e919f24bccde" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="httpStatus" ><![CDATA[%dw 2.0
+output application/json
+---
+ if (error.errorType.identifier == "BAD_REQUEST")
+     { "status": 400,
+        "message": "Bad/Invalid request"
+     }
+ else if(error.errorType.identifier == "NOT_FOUND")
+     { "status": 404,
+        "message": " Resource not found"
+     }
+ else if(error.errorType.identifier == "UNAUTHORIZED")
+     { "status": 401,
+        "message": "Unauthorized request, Username and password are invalid"
+     }
+ else if(error.errorType.identifier == "METHOD_NOT_ALLOWED") 
+     { "status": 405,
+        "message": "Method not allowed"
+     }
+ else if(error.errorType.identifier == "NOT_ACCEPTABLE")
+     { "status": 406,
+        "message": "Not Acceptable"
+     }
+ else if(error.errorType.identifier == "UNSUPPORTED_MEDIA_TYPE") 
+     { "status": 415,
+        "message": "Unsupported media type"
+     }
+ else if(error.errorType.identifier == "FORBIDDEN") 
+    {"status": 403,
+      "message":"Token is not valid, Please pass a valid token and try again"
+    }
+ else if(error.errorType.identifier == "TOO_MANY_REQUESTS")
+    {"status": 429,
+      "message": "Too many VSP requests"
+    }
+ else if(error.errorType.identifier == "UNKNOWN")
+    {"status": 419,
+      "message":"Invalid query filter operator"
+    }
+ else if(error.errorType.identifier == "APPLICANT")
+    {"status": 407,
+      "message":"Product or Customer Type not found"
+    }
+ else
+  {"status": 500,
+   "message": "Internal system error"
+    }]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="786a0c98-72ed-4bdf-9d37-a6b3ba9b01f0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+"metadata": vars.httpStatus
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+</mule>

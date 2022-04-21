@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<flow name="smb-ux-salesforce-objects-query-subflow" doc:id="84aa2de9-61e9-41b6-8e96-f3d99cbbce44" >
+		<http:listener doc:name="Listener" doc:id="41043d1a-b08b-48f4-82fa-59a726170427" path="/query" config-ref="HTTP_Listener_config">
+			<http:response statusCode="#[vars.httpStatus.status]" />
+			<http:error-response statusCode="#[vars.httpStatus.status default 500]" >
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<ee:transform doc:name="Transform Message" doc:id="2749d8ea-2191-4c18-a304-e6c8433a59ff" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.ApplicantInfo]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:query doc:name="Query" doc:id="dd015728-72b2-4e91-b2f0-675cfebfefbe" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[select fields(All) from Application__c 
+where Id= ':applicationId']]></salesforce:salesforce-query>
+			<salesforce:parameters ><![CDATA[#[{
+	applicationId: vars.ApplicantInfo.applicationId
+}]]]></salesforce:parameters>
+		</salesforce:query>
+		<ee:transform doc:name="Transform Message" doc:id="cdf097e3-d69d-4692-a429-69f5ce0f0b86" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="sfAppPayload" ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<error-handler ref="global_configError_Handler" />
+	</flow>
+	<flow name="smb-ux-salesforce-additional-applicants" doc:id="b18d73af-c45d-4dd2-a4a0-778ceb38938e" >
+		<http:listener doc:name="Listener" doc:id="2cf84c5e-d817-459e-99f2-6bf699bde65c" config-ref="HTTP_Listener_config" path="/addtional"/>
+		<ee:transform doc:name="Transform Message" doc:id="5d20fad9-17ba-4c8a-8c76-e77372419de2" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.ApplicantInfo]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:query doc:name="Query" doc:id="26be483a-a4ac-4ffd-9b44-d759a8691540" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[select fields(All) from Additional_Applicants__c limit 200
+where Application__c=':applicationId']]></salesforce:salesforce-query>
+			<salesforce:parameters ><![CDATA[#[{
+	applicationId: vars.ApplicantInfo.applicationId
+}]]]></salesforce:parameters>
+		</salesforce:query>
+		<ee:transform doc:name="Transform Message" doc:id="aace9442-636c-4977-ad83-0c0efcaa55b1" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="SFAddtinalApp" ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</flow>
+	<sub-flow name="smb-ux-salesforce-objects-upsert-sub-flow" doc:id="d6077c62-ae58-4525-a493-c8ac399f1406" >
+		<logger level="INFO" doc:name="Copy_of_Start upsert" doc:id="1d0bcecd-3d79-4c52-9dd2-a5e015112a4a" message="Start upsert for transaction #[vars.transactionId]" />
+		<set-variable value="#[vars.outPayload.objectName[0]]" doc:name="ObjectName" doc:id="050c0e32-adeb-4418-b35c-384081cf214f" variableName="object" />
+		<set-variable value="#[vars.outPayload.Id[0]]" doc:name="ExternalId" doc:id="467df166-f830-4846-8fc5-08cabb5f639a" variableName="externalId" />
+		<ee:transform doc:name="Transform Message" doc:id="37eebb3a-7b7d-4fa6-9605-5bb02576227a" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="UpsertPl" ><![CDATA[%dw 2.0
+//output application/csv header=true
+output application/java
+---
+
+	vars.outPayload map $ -"objectName"
+	
+ 
+]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<salesforce:upsert doc:name="Upsert" doc:id="96c6b6a2-e296-42eb-b647-b299e2d58520" config-ref="Salesforce_Config" objectType="#[vars.object]" externalIdFieldName="Id">
+			<salesforce:records ><![CDATA[#[//%dw 2.0
+//output application/java
+//---
+vars.UpsertPl]]]></salesforce:records>
+		</salesforce:upsert>
+		<logger level="INFO" doc:name="Logger" doc:id="0cde9fcb-ec13-4fa2-abe3-f3bad55e6c6e" message="#[payload]"/>
+		<choice doc:name="Choice" doc:id="3b33f7d7-7794-4b4a-81e0-950f830223b8" >
+			<when expression="#[!isEmpty(payload.items[0].payload.errors)]">
+				<set-variable value="#[%dw 2.0
+&#10;output application/json
+&#10;---
+&#10;vars.UpsertPl[0]]" doc:name="Set Variable" doc:id="b986678d-e87a-4107-8c5b-906a0b168e82" variableName="UpsertPl"/>
+				<ee:transform doc:name="Copy_of_Response" doc:id="7fadbf94-2905-4153-a12f-e3838b1da1e8">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+
+flatten(payload.items[0].payload.errors) map ((item, index) -> {
+    "message": item.message,
+    "fields": item.fields reduce ($$+$),
+    "statusCode": item.statusCode,
+    "applicationId": vars.UpsertPl.Id} )]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			
+</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="d6c20801-f6ca-470f-82b8-d5951335a46a" message="#[payload.items[0].payload]"/>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="23c7bbdc-a99d-4735-af5c-e193d531760c">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+ {"score_result": { 
+ "applicationId": if(payload.items.payload.id[0]== true) payload.items.payload.id[0] else vars.ApplicantInfo.applicationId, 
+ "customerType": vars.ApplicantInfo.customerType,
+ "product": vars.ApplicantInfo.product,
+ "VSPStatus":if (vars.outPayload.VSP_Status_Primary_Applicant__c[0]== true) vars.outPayload.VSP_Status_Primary_Applicant__c[0] else vars.outPayload.VSP_Status_Business__c[0]
+ },
+ "metadata":{
+ 	status: 200,
+ 	message: if (payload.items.payload.success[0]== true) "Success" else payload.statusCode[0] 
+ }
+ 
+ }]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End upsert" doc:id="ef0520e7-d76c-49ae-b1f0-fa93c2b8d8ff" message="End upsert for transaction #[payload]"/>
+	</sub-flow>
+	<flow name="smb-ux-salesforce-objects-create-subflow" doc:id="43ab309b-15f4-47e7-b87b-64cb831c28e1" >
+		<http:listener doc:name="Listener" doc:id="5c363bfb-dcaa-4867-908e-b383f7bce809" path="/upsert" config-ref="HTTP_Listener_config">
+			<http:response statusCode="#[vars.httpStatus.status]" />
+			<http:error-response statusCode="#[vars.httpStatus.status default 500]" >
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<set-variable value="#[vars.outPayload.objectName[0]]" doc:name="Set Variable" doc:id="28a2e71d-4c8f-4183-a5f2-bad198002bb7" variableName="object"/>
+		<set-variable value="#[vars.outPayload.Id[0]]" doc:name="Set Variable" doc:id="dddf37f9-9423-4206-b742-b59978214f04" variableName="externalId"/>
+		<ee:transform doc:name="Transform Message" doc:id="5b692d8a-c0a8-4302-9bef-fa3f9e0fa635" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="createSc" ><![CDATA[%dw 2.0
+output application/json
+---
+vars.outPayload map $ -"objectName"]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<salesforce:create doc:name="Create" doc:id="1eed89d8-198b-413e-bf38-c2eb0f6cd733" config-ref="Salesforce_Config" type="VSP_Integration__c">
+			<salesforce:records ><![CDATA[#[//%dw 2.0
+//output application/java
+//---
+vars.createSc]]]></salesforce:records>
+		</salesforce:create>
+		<choice doc:name="Choice" doc:id="2002a65f-19b1-41e5-9620-3f10f879ec8a" >
+			<when expression="#[!isEmpty(payload.items[0].payload.errors)]">
+				<set-variable value="#[vars.createSc[0]]" doc:name="Set Variable" doc:id="bb39f8e3-7ef1-48dc-a20f-73ce9d0c7e91" variableName="createSC"/>
+				<ee:transform doc:name="Transform Message" doc:id="70593194-55b5-42f7-a0f7-d4009f055a85" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+
+flatten(payload.items[0].payload.errors) map ((item, index) -> {
+    "message": item.message,
+    "fields": item.fields reduce ($$+$),
+    "statusCode": item.statusCode,
+    "applicationId": vars.UpsertPl.Id} )]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="a2dcc7f5-d2a0-4d19-b0f9-f50c3e9bff2d" />
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="bae3574b-181c-46c9-a228-e9b5c0f44001" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+ {"score_result": { 
+ "applicationId": if(payload.items.payload.id[0]== true) payload.items.payload.id[0] else vars.ApplicantInfo.applicationId, 
+ "customerType": vars.ApplicantInfo.customerType,
+ "product": vars.ApplicantInfo.product,
+ "VSPStatus":if (vars.outPayload.VSP_Status_Primary_Applicant__c[0]== true) vars.outPayload.VSP_Status_Primary_Applicant__c[0] else vars.outPayload.VSP_Status_Business__c[0]
+ },
+ "metadata":{
+ 	status: 200,
+ 	message: if (payload.items.payload.success[0]== true) "Success" else payload.statusCode[0] 
+ }
+ 
+ }]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="90f9c9d8-c8bb-4081-b5f8-01f300360c39" message="#[payload]"/>
+		<error-handler ref="global_configError_Handler" />
+	</flow>
+</mule>

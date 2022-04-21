@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<sub-flow name="SMB-UX-VSP-score-primaryApplicant" doc:id="c823537e-ddd3-4222-ad04-4c29f6373cb0" >
+		<logger level="INFO" doc:name="Logger" doc:id="c797938e-3ada-4189-b64e-cc2ae2d85166" />
+		<flow-ref doc:name="smb-ux-salesforce-objects-query-subflow" doc:id="825461fa-c013-40a1-8090-548c01bcc399" name="smb-ux-salesforce-objects-query-subflow"/>
+		<ee:transform doc:name="Transform Message" doc:id="8476d848-0d96-490c-8298-3e2a92a40d05" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="VSPAplicant" ><![CDATA[
+%dw 2.0
+output application/json
+import * from dw::core::Strings
+
+var modelCode =
+  if (vars.ApplicantInfo.customerType=="2" and vars.ApplicantInfo.product=="T")  
+    "TreasuryCams" 
+  else if (vars.ApplicantInfo.customerType=="2" and vars.ApplicantInfo.product=="D") 
+    "smbBusiness"
+  else if (vars.ApplicantInfo.customerType=="2" and vars.ApplicantInfo.product=="L" ) 
+     "smbCredit1"
+  else 
+    "smbSigner"
+
+---
+{
+	"RequestDate": now(),
+    "RequestID":vars.ApplicantInfo.applicationId,
+    "PersonID": vars.sfAppPayload.First_Name__c[0],
+    "IP": vars.sfAppPayload.IP_Address__c[0] default "",
+    "useBlacklst": false,
+    "Model": modelCode,
+    "ClientID": "1",
+	"Person": {
+        "FirstName": vars.sfAppPayload.First_Name__c[0],
+        "LastName": vars.sfAppPayload.Last_Name__c[0],
+        "StreetAddress1": vars.sfAppPayload.Address_1__c[0],
+        "StreetAddress2": vars.sfAppPayload.Address_2__c[0] default "",
+        "City": vars.sfAppPayload.City__c[0],
+        "State": vars.sfAppPayload.State__c[0],
+        "Zip": vars.sfAppPayload.Zip__c[0],
+        "Phone":vars.sfAppPayload.Phone__c[0],
+        "Email": vars.sfAppPayload.Email__c[0],
+        "SSN": vars.sfAppPayload.Social_Security_Number__c[0],
+        "DOB": vars.sfAppPayload.Birth_Date__c[0],
+        "IDType": if(vars.sfAppPayload.ID_Type__c[0]== "Driver's License") 1 else 9,
+        "IDState": vars.sfAppPayload.ID_State__c[0],
+        "IDCountry": vars.sfAppPayload.ID_Country__c[0] default "",
+        "IDNumber": vars.sfAppPayload.ID_Number__c[0]
+    }
+   }]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="SMB-UX-VSP-loginFlow" doc:id="eca64ec3-4a15-4af7-a338-19560746ffa1" name="SMB-UX-VSP-loginFlow" target="Authorization"/>
+		<set-variable value="#[vars.Authorization]" doc:name="Set Variable" doc:id="6c0cf1ab-3662-449c-8d4e-4bb2fd6188fd" variableName="BearerToken"/>
+		<http:request method="POST" doc:name="Request" doc:id="4e28db0d-c2f4-46f9-ab4e-91c0ecfcd8cc" path="/score" config-ref="HTTP_Request_VSP_configuration">
+			<http:body ><![CDATA[#[vars.VSPAplicant]]]></http:body>
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Authorization" : "Bearer " ++ vars.BearerToken
+}]]]></http:headers>
+		</http:request>
+		<ee:transform doc:name="Transform Message" doc:id="9de0f192-85d0-4606-8d02-73795121bb21" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="RejectedDecisions" ><![CDATA[%dw 2.0
+output application/json
+---
+if(payload.decisions.code[0]=="failed")true else false]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="d6835d7a-7adf-450a-87d2-4aa793949810" >
+			<when expression="#[vars.RejectedDecisions == true]">
+				<ee:transform doc:name="Transform Message" doc:id="987434c5-497f-4d31-a494-c3753a0406f6">
+					<ee:message>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="outPayload" ><![CDATA[%dw 2.0
+output application/json
+
+fun decisionProcess ()=
+if (payload.decisions.code[0] == (lower("Passed"))) 
+ "In Progress"
+ else "Rejected"
+---
+[{
+  objectName:"Application__c",
+  Id:vars.ApplicantInfo.applicationId,
+  Application_Status__c: decisionProcess(),
+  Decision_Code__c: payload.decisions.code[0],
+  Decision_Description__c: payload.decisions.description[0],
+  Factors__c:  "",
+  File_Establish_Date__c: "",
+  Profile_Date__c: "",
+  Profile_Time__c:"",
+  Risk_Class__c:"",
+  Score__c: "",
+  VSP_URL__c:payload.dashboardLink,
+  VSP_Model__c:payload.model,
+  VSP_Status_Primary_Applicant__c: if(payload.decisions.code[0]=="passed") "Accepted" else "Rejected"
+} ]  ]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<logger level="INFO" doc:name="upsert salesforce" doc:id="ae7afbbf-1713-451c-9fb0-13f256365ee1" message="#[correlationId]"/>
+				<flow-ref doc:name="smb-ux-salesforce-objects-upsert-sub-flow" doc:id="e2dd1930-79e2-414e-bba0-04dad0f2d9cf" name="smb-ux-salesforce-objects-upsert-sub-flow"/>
+				<raise-error doc:name="Raise error" doc:id="596e9a85-2912-4a79-b8c8-cc29077cbc55" type="VSP: BUSSFAIL"/>
+			
+</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="75a41879-e5af-4e55-847b-e47a085b8197">
+					<ee:message>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="outPayload" ><![CDATA[%dw 2.0
+output application/json
+
+fun decisionProcess ()=
+if (payload.decisions.code[0] == (lower("Passed"))) 
+ "In Progress"
+ else "Rejected"
+---
+[{
+  objectName:"Application__c",
+  Id:vars.ApplicantInfo.applicationId,
+  Application_Status__c: decisionProcess(),
+  Decision_Code__c: payload.decisions.code[0],
+  Decision_Description__c: payload.decisions.description[0],
+  Factors__c:  "",
+  File_Establish_Date__c: "",
+  Profile_Date__c: "",
+  Profile_Time__c:"",
+  Risk_Class__c:"",
+  Score__c: "",
+  VSP_URL__c:payload.dashboardLink,
+  VSP_Model__c:payload.model,
+  VSP_Status_Primary_Applicant__c: if(payload.decisions.code[0]=="passed") "Accepted" else "Rejected"
+} ]  ]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="b60013f4-7e70-45e4-8187-1ff1ba53272e" message="#[correlationId]"/>
+				<flow-ref doc:name="smb-ux-salesforce-objects-upsert-sub-flow" doc:id="34e2bfc2-96b1-420e-882b-b5dbe8d9dcf0" name="smb-ux-salesforce-objects-upsert-sub-flow"/>
+			
+</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="a448ab46-02fc-4e48-b5bb-126c4e7f9794" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[ {"score_result": { 
+ "applicationId": if(payload.items.payload.id[0]== true) payload.items.payload.id[0] else vars.ApplicantInfo.applicationId, 
+ "customerType": vars.ApplicantInfo.customerType,
+ "product": vars.ApplicantInfo.product,
+ "VSPStatus":if (vars.outPayload.VSP_Status_Primary_Applicant__c[0]== true) vars.outPayload.VSP_Status_Primary_Applicant__c[0] else vars.outPayload.VSP_Status_Business__c[0]
+ },
+ "metadata":{
+ 	status: 200,
+ 	message: if (payload.items.payload.success[0]== true) "Success" else payload.statusCode[0] 
+ }
+ 
+ }]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	
+
+
+</mule>
