@@ -180,4 +180,40 @@ type vspArray = Array<{|  LastModifiedDate: String,   Expiration_Date__c: String
       </types:input-event>
     </types:processor-declaration>
   </types:enrichment>
+  <types:enrichment select="#d9be40f4-f5ec-4358-9e96-5719a5e5e387">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="vspArray"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#fcf39844-6bea-4ea9-8838-868b53fec377">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="vspArray"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#b2ed8b6a-f10f-4370-a5ec-99b1d48f278c">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="vspArray"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#4f04ee19-4163-4666-9987-dfe82d37b3d5">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="vspArray"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
 </types:mule>

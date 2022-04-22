@@ -90,4 +90,53 @@ payload]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 	</flow>
+	<flow name="Salesforce_Flow3" doc:id="be8f24d5-1ec2-4d36-b228-267d0ed211c5" >
+		<ee:transform doc:name="Transform Message" doc:id="87454a0b-47ce-4625-96d4-913cddc3d715" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="SFAddtinalApp" ><![CDATA[%dw 2.0
+output application/json
+---
+[{
+  "Id":"2345thygrda576",
+  "IP_Address__c": "123-658-986",
+  "First_Name__c": "Dawid",
+  "Last_Name__c": "Tom",
+  "Address_1__c": "123 winchester lane",
+  "Address_2__C": "",
+  "City__c": "Charlotte",
+  "State__c": "NC",
+  "Zip__c": "28205",
+  "Phone__c": "704963823",
+  "Email__c": "Dawid@gamil.com",
+  "Birth_Date__c": "12/12/2000",
+  "Social_Security_Number__c": "123657896",
+  "ID_Type__c": "Driver's License",
+  "ID_State__c": "NC",
+  "ID_Number__c": "12365498",
+  "ID_Country__c(TDC)": "US"
+},
+  {
+  "Id": "2345thygrda986",
+  "IP_Address__c": "123-658-125",
+  "First_Name__c": "Dawit",
+  "Last_Name__c": "Smith",
+  "Address_1__c": "789 winchester lane",
+  "Address_2__C": "",
+  "City__c": "Charlotte",
+  "State__c": "NC",
+  "Zip__c": "28212",
+  "Phone__c": "7049631253",
+  "Email__c": "Dawit@gamil.com",
+ "Birth_Date__c": "11/12/2000",
+  "Social_Security_Number__c": "123651365",
+  "ID_Type__c": "Driver's License",
+  "ID_State__c": "NC",
+  "ID_Number__c": "1236578965",
+  "ID_Country__c(TDC)": "US"
+}]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</flow>
 </mule>

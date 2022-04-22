@@ -36,38 +36,40 @@ var modelCode =
     "smbSigner"
 
 ---
- [{
-	"RequestDate": now(),
-    "RequestID":vars.ApplicantInfo.applicationId,
-    "PersonID": vars.SFAddtinalApp.First_Name__c[0],
-    "IP": vars.SFAddtinalApp.IP_Address__c[0] default "",
+ vars.SFAddtinalApp map ((item, index) -> {
+    "RequestDate": now(),
+    "RequestID":item.Id,
+    "PersonID": item.First_Name__c,
+    "IP": item.IP_Address__c default "",
     "useBlacklst": false,
     "Model": "smbSigner",
     "ClientID": "1",
 	"Person": {
-        "FirstName": vars.SFAddtinalApp.First_Name__c[0],
-        "LastName": vars.SFAddtinalApp.Last_Name__c[0],
-        "StreetAddress1": vars.SFAddtinalApp.Address_1__c[0],
-        "StreetAddress2": vars.SFAddtinalApp.Address_2__c[0] default "",
-        "City": vars.SFAddtinalApp.City__c[0],
-        "State": vars.SFAddtinalApp.State__c[0],
-        "Zip": vars.SFAddtinalApp.Zip__c[0],
-        "Phone":vars.SFAddtinalApp.Phone__c[0],
-        "Email": vars.SFAddtinalApp.Email__c[0],
-        "SSN": vars.SFAddtinalApp.Social_Security_Number__c[0],
-        "DOB": vars.SFAddtinalApp.Birth_Date__c[0],
-        "IDType": if(vars.SFAddtinalApp.ID_Type__c[0]== "Driver's License") 1 else 9,
-        "IDState": vars.SFAddtinalApp.ID_State__c[0],
-        "IDCountry": vars.SFAddtinalApp.ID_Country__c[0] default "",
-        "IDNumber": vars.SFAddtinalApp.ID_Number__c[0]
+        "FirstName": item.First_Name__c,
+        "LastName": item.Last_Name__c,
+        "StreetAddress1": item.Address_1__c,
+        "StreetAddress2": item.Address_2__c default "",
+        "City": item.City__c,
+        "State": item.State__c,
+        "Zip": item.Zip__c,
+        "Phone":item.Phone__c,
+        "Email": item.Email__c,
+        "SSN": item.Social_Security_Number__c,
+        "DOB": item.Birth_Date__c,
+        "IDType": if(item.ID_Type__c== "Driver's License") 1 else 9,
+        "IDState": item.ID_State__c,
+        "IDCountry": item.ID_Country__c default "",
+        "IDNumber": item.ID_Number__c[0]
     }
-   }]]]></ee:set-variable>
+   
+} )]]></ee:set-variable>
 			</ee:variables>
 		
 </ee:transform>
 		<flow-ref doc:name="SMB-UX-VSP-loginFlow" doc:id="19f32c86-e5bd-400a-bc9c-56f35a5c80a9" name="SMB-UX-VSP-loginFlow" target="Authorization" />
 		<set-variable value="#[vars.Authorization]" doc:name="Set Variable" doc:id="8d849fb8-fe39-4650-87ef-048adca9ec93" variableName="BearerToken" />
 		<foreach doc:name="For Each" doc:id="3d8abe53-4e4d-45ef-b3ed-bdacec1dfa9b" collection="#[payload]">
+			<set-variable value="#[payload]" doc:name="Set Variable" doc:id="d9055643-bc44-4f1a-9087-6a4743939e72" variableName="currentApplicant"/>
 			<http:request method="POST" doc:name="Request" doc:id="e6f3b5d4-0e89-428b-8f54-7961ccac95e4" config-ref="HTTP_Request_VSP_configuration" path="/score">
 				<http:body><![CDATA[#[vars.VSPAplicant]]]></http:body>
 				<http:headers><![CDATA[#[output application/java
@@ -76,9 +78,7 @@ var modelCode =
 	"Authorization" : "Bearer " ++ vars.BearerToken
 }]]]></http:headers>
 			</http:request>
-
-		</foreach>
-		<ee:transform doc:name="Transform Message" doc:id="f4b3c2e9-fbe6-4102-bf30-bb005121658d">
+			<ee:transform doc:name="Transform Message" doc:id="f4b3c2e9-fbe6-4102-bf30-bb005121658d">
 			<ee:message>
 			</ee:message>
 			<ee:variables>
@@ -88,19 +88,21 @@ output application/json
 if(payload.decisions.code[0]=="rejected")true else false]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<choice doc:name="Choice" doc:id="1315c553-74da-495c-b984-2eefd24dd7a5">
+			<choice doc:name="Choice" doc:id="1315c553-74da-495c-b984-2eefd24dd7a5">
 			<when expression="#[vars.RejectedDecisions == true]">
 				<logger level="INFO" doc:name="Logger" doc:id="82d93725-e7a2-434a-a315-4a52374b8161" />
-				<flow-ref doc:name="smb-ux-additional-aplicant-sub-flow" doc:id="5692df92-2834-4c9e-ab90-fdcd20088629" name="smb-ux-additional-aplicant-sub-flow"/>
+				<flow-ref doc:name="smb-ux-additional-aplicant-sub-flow" doc:id="5692df92-2834-4c9e-ab90-fdcd20088629" name="smb-ux-additional-aplicant-sub-flow" />
 				<raise-error doc:name="Raise error" doc:id="efe81cfe-5960-4c82-867a-99e38b9b8922" type="VSP: APLIFAIL" />
 			
 </when>
 			<otherwise>
 				<logger level="INFO" doc:name="Logger" doc:id="63be6914-a520-4a0b-b63f-5088b9e39a72" />
-				<flow-ref doc:name="smb-ux-additional-aplicant-sub-flow" doc:id="c828ae14-f7cd-4b74-bb93-ed80a3222884" name="smb-ux-additional-aplicant-sub-flow"/>
+				<flow-ref doc:name="smb-ux-additional-aplicant-sub-flow" doc:id="c828ae14-f7cd-4b74-bb93-ed80a3222884" name="smb-ux-additional-aplicant-sub-flow" />
 			
 </otherwise>
 		</choice>
+
+		</foreach>
 		<ee:transform doc:name="Transform Message" doc:id="67c8e53d-797e-45e2-8676-d24f73d805ac" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[ {"score_result": { 
@@ -134,6 +136,7 @@ if (payload.decisions.code[0] == (lower("Passed")))
 ---
 [{
    objectName:"Additional_Applicants__c",
+   Id: vars.currentApplicant.RequestID, 
    Application__c:vars.ApplicantInfo.applicationId,
    VSP_Status_Additional_Applicant__c: decisionProcess()
  }]]]></ee:set-payload>
@@ -154,15 +157,16 @@ if (payload.decisions.code[0] == (lower("Passed")))
 ---
 [{
   objectName:"Product_Role__c",
-  Relationship__c: vars.ApplicantInfo.applicationId,
-  Factors__c: "",
+  Relationship__c: vars.SFAddtinalApp.Additional_Applicant_Relationship__c,
+  Application_Product__c: "",
+  //Factors__c: "",
   Decision_Code__c: payload.decisions.code[0],
   Decision_Description__c: payload.decisions.description[0],
-  File_Establish_Date__c: "",
-  Profile_Date__c: "",
-  Profile_Time__c: "",
-  Score__c: "",
-  VSP_ID__c: "",
+  //File_Establish_Date__c: "",
+  Profile_Date__c: payload.vendors.primCamsScore.profileDate,
+  Profile_Time__c: payload.vendors.primCamsScore.profileTime,
+  Score__c: payload.score,
+  VSP_ID__c: payload.vendors.primCamsScore.vspId,
   VSP_Model__c:payload.model,
   VSP_URL__c: payload.vendors.primCamsScore.vspUrl,
   Product_Role_Status__c: decisionProcess(),
@@ -180,30 +184,18 @@ if (payload.decisions.code[0] == (lower("Passed")))
 output application/json
 ---
 [{
-   "objectName":"VSP__c",	
-   "action__c":"",
-   "CreatedById":"",
-   "CreatedDate":"",
+   "objectName":"VSP_Integration__c",	
+   //"action__c":""?,
    "Decision_Code__c":payload.decisions.code[0],
    "Decision_Description__c":payload.decisions.description[0],
-   "factors__c":"",
-   "file__c":"",
-   "Id":"",
-   "IsDeleted":"",
-   "LastActivityDate":"",
-   "LastModifiedById":"",
-   "LastModifiedDate":"",
-   "LastReferencedDate":"",
-   "LastViewedDate":"",
-   "Name":"",
-   "OwnerId":"",
-   //"profileData__c":"",
+   //"factors__c":"",
+   "OwnerId": p ('Sf.vsp_owner'),
    "profileDate__c":payload.vendors.primCamsScore.profileDate,
    "profileTime__c":payload.vendors.primCamsScore.profileTime,
-   "Relationship__c":vars.ApplicantInfo.applicationId,
+   "Relationship__c":vars.SFAddtinalApp.Additional_Applicant_Relationship__c,
    "riskClass__c":payload.vendors.primCamsScore.riskClass,
    "score__c":payload.score,
-   "SystemModstamp":"",
+   //"SystemModstamp":"",
    "VSP_ID__c": payload.vendors.primCamsScore.vspId,
    "VSP_Model__c":payload.model,
    //"VSP_Results__c":if(payload.decisions.code[0]=="passed") "Accepted" else "Rejected",

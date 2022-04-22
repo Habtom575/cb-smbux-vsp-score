@@ -40,7 +40,7 @@ vars.ApplicantInfo]]></ee:set-payload>
 </when>
 			<when expression='#[payload.customerType =="2" and payload.product=="D"]'>
 				<logger level="INFO" doc:name="Logger" doc:id="8260949a-ee6a-4e7e-a038-b4e3b40c58bb" />
-				<flow-ref doc:name="smb-ux-busines-debit-flow" doc:id="15728ee9-079e-4ae9-b957-ddbe320fde5f" name="smb-ux-busines-debit-flow"/>
+				<flow-ref doc:name="smb-ux-busines-deposit-flow" doc:id="15728ee9-079e-4ae9-b957-ddbe320fde5f" name="smb-ux-busines-deposit-flow"/>
 			</when>
 			<otherwise >
 				<logger level="INFO" doc:name="Logger" doc:id="c981317f-3b92-46c6-922d-88cd2abca7a8" />

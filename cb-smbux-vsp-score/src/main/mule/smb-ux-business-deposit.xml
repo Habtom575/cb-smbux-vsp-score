@@ -12,7 +12,7 @@ http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/sc
 http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd
 http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
 http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
-	<sub-flow name="smb-ux-busines-debit-flow" doc:id="ff5eaa5e-9793-4e00-bd08-25889109cf70" >
+	<sub-flow name="smb-ux-busines-deposit-flow" doc:id="ff5eaa5e-9793-4e00-bd08-25889109cf70" >
 		<logger level="INFO" doc:name="Logger" doc:id="27062994-1299-4fb7-a5be-ec297e191c04" />
 		<flow-ref doc:name="smb-ux-salesforce-objects-query-subflow" doc:id="4094aea6-e1c5-4adf-bd8d-08e60b366fe3" name="smb-ux-salesforce-objects-query-subflow"/>
 		<ee:transform doc:name="Transform Message" doc:id="7f0a8dbb-9eb2-4c3e-bc52-53cb3946ecfb" >
@@ -92,14 +92,13 @@ var modelCode =
 				<ee:set-variable variableName="RejectedDecisions"><![CDATA[%dw 2.0
 output application/json
 ---
-if(payload.decisions.code[0]=="rejected")true else false]]></ee:set-variable>
+if(payload.decisions.code[0]=="ejected")true else false]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<choice doc:name="Choice" doc:id="13542e21-8c2d-4dab-95c9-88976ed8197e" >
 			<when expression="#[vars.RejectedDecisions == true]">
 				<logger level="INFO" doc:name="Logger" doc:id="57f08c49-4024-4779-b9b9-51de7637fec5" />
 				<flow-ref doc:name="smb-ux-business-debit-sub-flow" doc:id="50a13a31-0ddd-4deb-bf76-8ed59cd97d75" name="smb-ux-business-debit-sub-flow" target="upsertData"/>
-				<raise-error doc:name="Raise error" doc:id="55650f9d-02f8-4651-ae29-dd50303823a2" type="VSP: TRCOMFAIL"/>
 			
 </when>
 			<otherwise >
@@ -143,64 +142,36 @@ fun decisionProcess ()=
 if (payload.decisions.code[0] == (lower("Passed"))) 
  "In Progress"
  else "Rejected"
-
+ 
+fun decisionStage ()=
+if (payload.decisions.code[0] == (lower("Passed"))) 
+ "Pending Deposit Onboarding"
+ else "Rejected"
 ---
 [{
   objectName: "Application__c",
   Id: vars.ApplicantInfo.applicationId,
   Application_Status__c: decisionProcess(),
-  Application_Stage__c:"",
+  Application_Stage__c: decisionStage(),
   VSP_Business__c:"",
   Decision_Code_Business__c:payload.decisions.code[0],
   Decision_Description_Business__c: payload.decisions.description[0],
-  Factors_Business__c:"",
-  File_Establish_Date_Business__c:"",
-  Profile_Date_Business__c:"",
-  Profile_Time_Business__c:"",
-  Risk_Class_Business__c:"",
-  Score_Business__c:"",
+  //Factors_Business__c:"",
+  //File_Establish_Date_Business__c:"",
+  Profile_Date_Business__c: payload.vendors.primCamsScore.profileDate,
+  Profile_Time_Business__c: payload.vendors.primCamsScore.profileTime,
+  Risk_Class_Business__c:payload.vendors.primCamsScore.riskClass,
+  Score_Business__c: payload.score as String,
   VSP_URL_Business__c:payload.vendors.primCamsScore.vspUrl,
   VSP_Model_Business__c:payload.model,
   VSP_Status_Business__c: if(payload.decisions.code[0]=="passed") "Accepted" else "Rejected"
- }]]]></ee:set-variable>
+ }]
+ 
+]]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 				<logger level="INFO" doc:name="Copy_of_Logger" doc:id="e721d7b8-5946-4e49-b1d1-2a1fc8d775d6" message="#[payload]" />
 				<flow-ref doc:name="smb-ux-salesforce-objects-upsert-sub-flow" doc:id="7f2447d8-28e3-4e61-922e-e1b246d6a9e5" name="smb-ux-salesforce-objects-upsert-sub-flow" />
-			</route>
-			<route>
-				<ee:transform doc:name="map of Procust_Role_c" doc:id="768d84d8-64d9-496c-82bc-ccfbdf6bc419">
-					<ee:message>
-					</ee:message>
-					<ee:variables>
-						<ee:set-variable variableName="outPayload"><![CDATA[%dw 2.0
-output application/json
-fun decisionProcess ()=
-if (payload.decisions.code[0] == (lower("Passed"))) 
- "In Progress"
- else "Rejected"
-
----
-[{
-  objectName:"Product_Role__c",
-  Relationship__c: vars.ApplicantInfo.applicationId,
-  Factors__c: "",
-  Decision_Code__c: payload.decisions.code[0],
-  Decision_Description__c: payload.decisions.description[0],
-  File_Establish_Date__c: "",
-  Profile_Date__c: "",
-  Profile_Time__c: "",
-  Score__c: "",
-  VSP_ID__c: "",
-  VSP_Model__c:payload.model,
-  VSP_URL__c: payload.vendors.primCamsScore.vspUrl,
-  Product_Role_Status__c: decisionProcess(),
-  VSP_Status__c: if(payload.decisions.code[0]=="passed") "Accepted" else "Rejected"
- }]]]></ee:set-variable>
-					</ee:variables>
-				</ee:transform>
-				<logger level="INFO" doc:name="Copy_of_Logger" doc:id="4bb75f57-d511-4866-8391-2564c8c28a1e" message="#[payload]" />
-				<flow-ref doc:name="smb-ux-salesforce-objects-upsert-sub-flow" doc:id="2f208bb7-a0d8-4ec7-b4fd-b5b784d0eca8" name="smb-ux-salesforce-objects-upsert-sub-flow" />
 			</route>
 			<route>
 				<ee:transform doc:name="map of Application_Product_c" doc:id="64333c00-6a84-4c89-8064-e5d755be9b07">
@@ -219,6 +190,42 @@ if (payload.decisions.code[0] == (lower("Passed")))
    objectName:"Application_Product__c",
    Application__c:vars.ApplicantInfo.applicationId,
    Application_Product_Status__c: decisionProcess()
+   //additional field 
+ }]]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<logger level="INFO" doc:name="Copy_of_Logger" doc:id="4bb75f57-d511-4866-8391-2564c8c28a1e" message="#[payload]" />
+				<flow-ref doc:name="smb-ux-salesforce-objects-upsert-sub-flow" doc:id="2f208bb7-a0d8-4ec7-b4fd-b5b784d0eca8" name="smb-ux-salesforce-objects-upsert-sub-flow" />
+			</route>
+			<route>
+				<ee:transform doc:name="map of Procust_Role_c" doc:id="768d84d8-64d9-496c-82bc-ccfbdf6bc419">
+					<ee:message>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="outPayload"><![CDATA[%dw 2.0
+output application/json
+fun decisionProcess ()=
+if (payload.decisions.code[0] == (lower("Passed"))) 
+ "In Progress"
+ else "Rejected"
+
+---
+[{
+  objectName:"Product_Role__c",
+  Relationship__c: vars.sfAppPayload.Business_Relationship__c,
+  //Factors__c: "",
+  Application_Product__c: "",
+  Decision_Code__c: payload.decisions.code[0],
+  Decision_Description__c: payload.decisions.description[0],
+  //File_Establish_Date__c: "",
+  Profile_Date__c: payload.vendors.primCamsScore.profileDate,
+  Profile_Time__c: payload.vendors.primCamsScore.profileTime,
+  Score__c: payload.score,
+  VSP_ID__c: payload.vendors.primCamsScore.vspId,
+  VSP_Model__c:payload.model,
+  VSP_URL__c: payload.vendors.primCamsScore.vspUrl,
+  Product_Role_Status__c: decisionProcess(),
+  VSP_Status__c: if(payload.decisions.code[0]=="passed") "Accepted" else "Rejected"
  }]]]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
@@ -234,33 +241,32 @@ if (payload.decisions.code[0] == (lower("Passed")))
 output application/json
 ---
 [{
-   "objectName":"VSP__c",	
-   "action__c":"",
-   "CreatedById":"",
-   "CreatedDate":"",
+   "objectName":"VSP_Intergation__c",	
+   //"action__c":"",?
+   //"CreatedById":"",
+   //"CreatedDate":"",
    "Decision_Code__c":payload.decisions.code[0],
    "Decision_Description__c":payload.decisions.description[0],
-   "factors__c":"",
-   "file__c":"",
-   "Id":"",
-   "IsDeleted":"",
-   "LastActivityDate":"",
-   "LastModifiedById":"",
-   "LastModifiedDate":"",
-   "LastReferencedDate":"",
-   "LastViewedDate":"",
-   "Name":"",
-   "OwnerId":"",
+   //"factors__c":"",
+   //"file__c":"",
+   //"IsDeleted":"",
+   //"LastActivityDate":"",
+   //"LastModifiedById":"",
+   //"LastModifiedDate":"",
+   //"LastReferencedDate":"",
+   //"LastViewedDate":"",
+   //"Name":"",
+   "OwnerId": p ('Sf.vsp_owner'),
    //"profileData__c":"",
    "profileDate__c":payload.vendors.primCamsScore.profileDate,
    "profileTime__c":payload.vendors.primCamsScore.profileTime,
-   "Relationship__c":vars.ApplicantInfo.applicationId,
+   "Relationship__c":vars.sfAppPayload.Business_Relationship__c,
    "riskClass__c":payload.vendors.primCamsScore.riskClass,
    "score__c":payload.score,
-   "SystemModstamp":"",
+   //"SystemModstamp":"",
    "VSP_ID__c": payload.vendors.primCamsScore.vspId,
    "VSP_Model__c":payload.model,
-   //"VSP_Result__c":if(payload.decisions.code[0]=="passed") "Accepted" else "Rejected",
+   //"VSP_Results__c":if(payload.decisions.code[0]=="passed") "Accepted" else "Rejected",
    "VSP_URL__c": payload.vendors.primCamsScore.vspUrl
 }]]]></ee:set-variable>
 					</ee:variables>

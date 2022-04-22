@@ -2,7 +2,7 @@ SF:
  url: "https://cs171.salesforce.com/services/Soap/u/52.0"
  user: "salesforceadmin@customersbank.com.smbuxdev"
  token: "96PyPfUNsperrAnJfA5OhCeRW"
-
+ vsp_owner: "005o0000000GsbOAAS"
 httpListner:
  host: "localhost"
  port: "8091"
@@ -23,4 +23,3 @@ cb_auth:
  path: "login"
  clientId: "37e993bdc43e453eadcbdc12e146c85c"
  clientSecret: "a9c84b70A0Cb436AbB21cf97E60904E3"
- 
