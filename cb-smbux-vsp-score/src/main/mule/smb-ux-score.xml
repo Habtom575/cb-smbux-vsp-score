@@ -44,20 +44,7 @@ vars.ApplicantInfo]]></ee:set-payload>
 			</when>
 			<otherwise >
 				<logger level="INFO" doc:name="Logger" doc:id="c981317f-3b92-46c6-922d-88cd2abca7a8" />
-				<raise-error doc:name="Raise error" doc:id="2f85640a-3314-4899-86c3-f5ed16b1df07" type="VSP:APPLICANT"/>
-				<ee:transform doc:name="Transform Message" doc:id="928e7d63-0c2d-4e2a-a8ac-63a5dafdd0d7" >
-					<ee:message >
-						<ee:set-payload ><![CDATA[%dw 2.0
-output application/json
----
-{ "metadata":{
-	"status": 407,
-	"message": "Product or Customer Type not found"
-}
-	
-} ]]></ee:set-payload>
-					</ee:message>
-				</ee:transform>
+				<raise-error doc:name="Raise error" doc:id="2f85640a-3314-4899-86c3-f5ed16b1df07" type="VSP:FAILAPPLICANT"/>
 			
 </otherwise>
 		

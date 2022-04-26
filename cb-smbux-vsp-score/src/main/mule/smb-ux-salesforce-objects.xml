@@ -53,8 +53,8 @@ vars.ApplicantInfo]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 		<salesforce:query doc:name="Query" doc:id="26be483a-a4ac-4ffd-9b44-d759a8691540" config-ref="Salesforce_Config">
-			<salesforce:salesforce-query ><![CDATA[select fields(All) from Additional_Applicants__c limit 200
-where Application__c=':applicationId']]></salesforce:salesforce-query>
+			<salesforce:salesforce-query ><![CDATA[select fields(All) from Additional_Applicants__c 
+where Application__c=':applicationId' limit 200]]></salesforce:salesforce-query>
 			<salesforce:parameters ><![CDATA[#[{
 	applicationId: vars.ApplicantInfo.applicationId
 }]]]></salesforce:parameters>
@@ -89,7 +89,7 @@ output application/java
 ]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<salesforce:upsert doc:name="Upsert" doc:id="96c6b6a2-e296-42eb-b647-b299e2d58520" config-ref="Salesforce_Config" objectType="#[vars.object]" externalIdFieldName="Id">
+		<salesforce:upsert doc:name="Upsert" doc:id="96c6b6a2-e296-42eb-b647-b299e2d58520" config-ref="Salesforce_Config" objectType="#[vars.object]" externalIdFieldName="Id" target="SfUpsertResult">
 			<salesforce:records ><![CDATA[#[//%dw 2.0
 //output application/java
 //---
@@ -97,7 +97,7 @@ vars.UpsertPl]]]></salesforce:records>
 		</salesforce:upsert>
 		<logger level="INFO" doc:name="Logger" doc:id="0cde9fcb-ec13-4fa2-abe3-f3bad55e6c6e" message="#[payload]"/>
 		<choice doc:name="Choice" doc:id="3b33f7d7-7794-4b4a-81e0-950f830223b8" >
-			<when expression="#[!isEmpty(payload.items[0].payload.errors)]">
+			<when expression="#[!isEmpty(vars.SfUpsertResult.items[0].payload.errors)]">
 				<set-variable value="#[%dw 2.0
 &#10;output application/json
 &#10;---
@@ -134,7 +134,7 @@ output application/json
  },
  "metadata":{
  	status: 200,
- 	message: if (payload.items.payload.success[0]== true) "Success" else payload.statusCode[0] 
+ 	message: if (vars.SfUpsertResult.items.payload.success[0]== true) "Success" else payload.statusCode[0] 
  }
  
  }]]></ee:set-payload>
@@ -161,14 +161,14 @@ output application/json
 vars.outPayload map $ -"objectName"]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<salesforce:create doc:name="Create" doc:id="1eed89d8-198b-413e-bf38-c2eb0f6cd733" config-ref="Salesforce_Config" type="VSP_Integration__c">
+		<salesforce:create doc:name="Create" doc:id="1eed89d8-198b-413e-bf38-c2eb0f6cd733" config-ref="Salesforce_Config" type="VSP_Integration__c" target="SfCreateResult">
 			<salesforce:records ><![CDATA[#[//%dw 2.0
 //output application/java
 //---
 vars.createSc]]]></salesforce:records>
 		</salesforce:create>
 		<choice doc:name="Choice" doc:id="2002a65f-19b1-41e5-9620-3f10f879ec8a" >
-			<when expression="#[!isEmpty(payload.items[0].payload.errors)]">
+			<when expression="#[!isEmpty(vars.SfCreateResult.items[0].payload.errors)]">
 				<set-variable value="#[vars.createSc[0]]" doc:name="Set Variable" doc:id="bb39f8e3-7ef1-48dc-a20f-73ce9d0c7e91" variableName="createSC"/>
 				<ee:transform doc:name="Transform Message" doc:id="70593194-55b5-42f7-a0f7-d4009f055a85" >
 					<ee:message >

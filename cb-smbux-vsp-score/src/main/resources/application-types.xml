@@ -216,4 +216,13 @@ type vspArray = Array<{|  LastModifiedDate: String,   Expiration_Date__c: String
       </types:input-event>
     </types:processor-declaration>
   </types:enrichment>
+  <types:enrichment select="#7bcbeb5c-784e-4605-99dc-5926a62bf725">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="vspInput"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
 </types:mule>

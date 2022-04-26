@@ -86,7 +86,7 @@ output application/json
     {"status": 419,
       "message":"Invalid query filter operator"
     }
- else if(error.errorType.identifier == "APPLICANT")
+ else if(error.errorType.identifier == "FAILAPPLICANT")
     {"status": 407,
       "message":"Product or Customer Type not found"
     }

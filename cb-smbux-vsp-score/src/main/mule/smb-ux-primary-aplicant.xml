@@ -65,7 +65,7 @@ var modelCode =
 		</ee:transform>
 		<flow-ref doc:name="SMB-UX-VSP-loginFlow" doc:id="eca64ec3-4a15-4af7-a338-19560746ffa1" name="SMB-UX-VSP-loginFlow" target="Authorization"/>
 		<set-variable value="#[vars.Authorization]" doc:name="Set Variable" doc:id="6c0cf1ab-3662-449c-8d4e-4bb2fd6188fd" variableName="BearerToken"/>
-		<http:request method="POST" doc:name="Request" doc:id="4e28db0d-c2f4-46f9-ab4e-91c0ecfcd8cc" path="/score" config-ref="HTTP_Request_VSP_configuration">
+		<http:request method="POST" doc:name="Request" doc:id="4e28db0d-c2f4-46f9-ab4e-91c0ecfcd8cc" path="/score" config-ref="HTTP_Request_VSP_configuration" target="VSPPrimaryApplScore">
 			<http:body ><![CDATA[#[vars.VSPAplicant]]]></http:body>
 			<http:headers ><![CDATA[#[output application/java
 ---
@@ -80,7 +80,7 @@ var modelCode =
 				<ee:set-variable variableName="RejectedDecisions" ><![CDATA[%dw 2.0
 output application/json
 ---
-if(payload.decisions.code[0]=="failed")true else false]]></ee:set-variable>
+if(vars.VSPPrimaryApplScore.decisions.code[0]=="failed")true else false]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<choice doc:name="Choice" doc:id="d6835d7a-7adf-450a-87d2-4aa793949810" >
@@ -93,7 +93,7 @@ if(payload.decisions.code[0]=="failed")true else false]]></ee:set-variable>
 output application/json
 
 fun decisionProcess ()=
-if (payload.decisions.code[0] == (lower("Passed"))) 
+if (vars.VSPPrimaryApplScore.decisions.code[0] == (lower("Passed"))) 
  "In Progress"
  else "Rejected"
 ---
@@ -101,23 +101,38 @@ if (payload.decisions.code[0] == (lower("Passed")))
   objectName:"Application__c",
   Id:vars.ApplicantInfo.applicationId,
   Application_Status__c: decisionProcess(),
-  Decision_Code__c: payload.decisions.code[0],
-  Decision_Description__c: payload.decisions.description[0],
-  Factors__c:  "",
-  File_Establish_Date__c: "",
-  Profile_Date__c: "",
-  Profile_Time__c:"",
-  Risk_Class__c:"",
-  Score__c: "",
-  VSP_URL__c:payload.dashboardLink,
-  VSP_Model__c:payload.model,
-  VSP_Status_Primary_Applicant__c: if(payload.decisions.code[0]=="passed") "Accepted" else "Rejected"
-} ]  ]]></ee:set-variable>
+  Decision_Code__c: vars.VSPPrimaryApplScore.decisions.code[0],
+  Decision_Description__c: vars.VSPPrimaryApplScore.decisions.description[0],
+  //Factors__c:  "",
+  //File_Establish_Date__c: "",
+  Profile_Date__c: vars.VSPPrimaryApplScore.vendors.primCamsScore.profileDate,
+  Profile_Time__c: vars.VSPPrimaryApplScore.vendors.primCamsScore.profileTime,
+  Risk_Class__c: vars.VSPPrimaryApplScore.vendors.primCamsScore.riskClass,
+  Score__c: vars.VSPPrimaryApplScore.score as String,
+  VSP_URL__c: vars.VSPPrimaryApplScore.vendors.primCamsScore.vspUrl,
+  VSP_Model__c: vars.VSPPrimaryApplScore.model,
+  VSP_Status_Primary_Applicant__c: if(vars.VSPPrimaryApplScore.decisions.code[0]=="passed") "Accepted" else "Rejected"
+} ] ]]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 				<logger level="INFO" doc:name="upsert salesforce" doc:id="ae7afbbf-1713-451c-9fb0-13f256365ee1" message="#[correlationId]"/>
-				<flow-ref doc:name="smb-ux-salesforce-objects-upsert-sub-flow" doc:id="e2dd1930-79e2-414e-bba0-04dad0f2d9cf" name="smb-ux-salesforce-objects-upsert-sub-flow"/>
-				<raise-error doc:name="Raise error" doc:id="596e9a85-2912-4a79-b8c8-cc29077cbc55" type="VSP: BUSSFAIL"/>
+				<flow-ref doc:name="smb-ux-salesforce-objects-upsert-sub-flow" doc:id="e2dd1930-79e2-414e-bba0-04dad0f2d9cf" name="smb-ux-salesforce-objects-upsert-sub-flow" target="upsertPrimApplData"/>
+				<try doc:name="Try" doc:id="360b2520-543e-4998-90d6-7c79c1091270" >
+					<raise-error doc:name="Raise error" doc:id="596e9a85-2912-4a79-b8c8-cc29077cbc55" type="VSP: PRIMAYAPPLICANFAIL" />
+					<error-handler >
+						<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="051b2c5d-9df1-48c6-8808-24ffe9856f56" >
+							<ee:transform doc:name="Transform Message" doc:id="be4c8994-e5b2-4cd5-8895-56aa3457e85c" >
+								<ee:message >
+									<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+}]]></ee:set-payload>
+								</ee:message>
+							</ee:transform>
+						</on-error-continue>
+					</error-handler>
+				</try>
 			
 </when>
 			<otherwise >
@@ -129,7 +144,7 @@ if (payload.decisions.code[0] == (lower("Passed")))
 output application/json
 
 fun decisionProcess ()=
-if (payload.decisions.code[0] == (lower("Passed"))) 
+if (vars.VSPPrimaryApplScore.decisions.code[0] == (lower("Passed"))) 
  "In Progress"
  else "Rejected"
 ---
@@ -137,36 +152,39 @@ if (payload.decisions.code[0] == (lower("Passed")))
   objectName:"Application__c",
   Id:vars.ApplicantInfo.applicationId,
   Application_Status__c: decisionProcess(),
-  Decision_Code__c: payload.decisions.code[0],
-  Decision_Description__c: payload.decisions.description[0],
-  Factors__c:  "",
-  File_Establish_Date__c: "",
-  Profile_Date__c: "",
-  Profile_Time__c:"",
-  Risk_Class__c:"",
-  Score__c: "",
-  VSP_URL__c:payload.dashboardLink,
-  VSP_Model__c:payload.model,
-  VSP_Status_Primary_Applicant__c: if(payload.decisions.code[0]=="passed") "Accepted" else "Rejected"
+  Decision_Code__c: vars.VSPPrimaryApplScore.decisions.code[0],
+  Decision_Description__c: vars.VSPPrimaryApplScore.decisions.description[0],
+  //Factors__c:  "",
+  //File_Establish_Date__c: "",
+  Profile_Date__c: vars.VSPPrimaryApplScore.vendors.primCamsScore.profileDate,
+  Profile_Time__c: vars.VSPPrimaryApplScore.vendors.primCamsScore.profileTime,
+  Risk_Class__c: vars.VSPPrimaryApplScore.vendors.primCamsScore.riskClass,
+  Score__c: vars.VSPPrimaryApplScore.score as String,
+  VSP_URL__c: vars.VSPPrimaryApplScore.vendors.primCamsScore.vspUrl,
+  VSP_Model__c: vars.VSPPrimaryApplScore.model,
+  VSP_Status_Primary_Applicant__c: if(vars.VSPPrimaryApplScore.decisions.code[0]=="passed") "Accepted" else "Rejected"
 } ]  ]]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
 				<logger level="INFO" doc:name="Logger" doc:id="b60013f4-7e70-45e4-8187-1ff1ba53272e" message="#[correlationId]"/>
-				<flow-ref doc:name="smb-ux-salesforce-objects-upsert-sub-flow" doc:id="34e2bfc2-96b1-420e-882b-b5dbe8d9dcf0" name="smb-ux-salesforce-objects-upsert-sub-flow"/>
+				<flow-ref doc:name="smb-ux-salesforce-objects-upsert-sub-flow" doc:id="34e2bfc2-96b1-420e-882b-b5dbe8d9dcf0" name="smb-ux-salesforce-objects-upsert-sub-flow" target="upsertPrimApplData"/>
 			
 </otherwise>
 		</choice>
 		<ee:transform doc:name="Transform Message" doc:id="a448ab46-02fc-4e48-b5bb-126c4e7f9794" >
 			<ee:message >
-				<ee:set-payload ><![CDATA[ {"score_result": { 
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+ {"score_result": { 
  "applicationId": if(payload.items.payload.id[0]== true) payload.items.payload.id[0] else vars.ApplicantInfo.applicationId, 
  "customerType": vars.ApplicantInfo.customerType,
  "product": vars.ApplicantInfo.product,
- "VSPStatus":if (vars.outPayload.VSP_Status_Primary_Applicant__c[0]== true) vars.outPayload.VSP_Status_Primary_Applicant__c[0] else vars.outPayload.VSP_Status_Business__c[0]
+ "VSPStatus":if(vars.VSPPrimaryApplScore.decisions.code[0]=="passed") "Accepted" else "Rejected"
  },
  "metadata":{
  	status: 200,
- 	message: if (payload.items.payload.success[0]== true) "Success" else payload.statusCode[0] 
+ 	message: vars.upsertPrimApplData.metadata.message
  }
  
  }]]></ee:set-payload>
