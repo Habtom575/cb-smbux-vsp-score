@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<sub-flow name="smb-ux-business-loan-flow" doc:id="f43d2e13-518d-433a-972f-36cda9253a78" >
+		<logger level="INFO" doc:name="Logger" doc:id="098eadda-ad89-4bd4-92fa-bd8286e2edab" />
+		<flow-ref doc:name="smb-ux-salesforce-objects-query-subflow" doc:id="72d3735c-d9ab-453a-8eda-401134dbeb01" name="smb-ux-salesforce-objects-query-subflow"/>
+		<ee:transform doc:name="Transform Message" doc:id="2400b2de-7222-4407-86a2-214fbc80b3b0" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="VSPAplicant" ><![CDATA[%dw 2.0
+output application/json
+import * from dw::core::Strings
+
+var modelCode =
+  if (vars.ApplicantInfo.customerType=="2" and vars.ApplicantInfo.product=="T")  
+    "TreasuryCams" 
+  else if (vars.ApplicantInfo.customerType=="2" and vars.ApplicantInfo.product=="D") 
+    "smbBusiness"
+  else if (vars.ApplicantInfo.customerType=="2" and vars.ApplicantInfo.product=="L" ) 
+     "smbCredit1"
+  else 
+    "smbSigner"
+
+---
+{
+	"RequestDate": now(),
+    "RequestID":vars.ApplicantInfo.applicationId,
+    "PersonID": vars.sfAppPayload.Name_of_Business__c[0],
+    "IP": vars.sfAppPayload.applicant_ip[0] default "",
+    "useBlacklist": false,
+    "Model": "smbBusiness",
+    "ClientID": "1",
+    "Company": {
+      "CompanyName": vars.sfAppPayload.Name_of_Business__c[0],
+      "AlternateCompanyName": vars.sfAppPayload.Altrnate_Business_Name__c[0],
+      "FEIN": vars.sfAppPayload.EIN__c[0],
+      "Phone": vars.sfAppPayload.Business_Phone__c[0],
+      "StreetAddress1": vars.sfAppPayload.Business_Address_1__c[0],
+      "StreetAddress2": vars.sfAppPayload.Business_Address_2__c[0],
+      "City": vars.sfAppPayload.Business_City__c[0],
+      "State": vars.sfAppPayload.Business_State__c[0],
+      "Zip": vars.sfAppPayload.Business_Zip__c[0],
+  
+      "ApplicantSigners": [
+        {
+         "FirstName": vars.sfAppPayload.First_Name__c[0],
+        "LastName": vars.sfAppPayload.Last_Name__c[0],
+        "StreetAddress1": vars.sfAppPayload.Address_1__c[0],
+        "StreetAddress2": vars.sfAppPayload.Address_2__c[0],
+        "City": vars.sfAppPayload.City__c[0],
+        "State": vars.sfAppPayload.State__c[0],
+        "Zip": vars.sfAppPayload.Zip__c[0],
+        "Phone": vars.sfAppPayload.Phone__c[0],
+        "Email": vars.sfAppPayload.Email__c[0],
+        "SSN": vars.sfAppPayload.Social_Security_Number__c[0],
+        "DOB": vars.sfAppPayload.Birth_Date__c[0],
+        "IDType":  if(vars.sfAppPayload.ID_Type__c[0]== "Driver's License") 1 else 9,
+        "IDState": vars.sfAppPayload.ID_State__c[0],
+        "IDCountry": vars.sfAppPayload.ID_Country__c[0] default "",
+        "IDNumber": vars.sfAppPayload.ID_Number__c[0]
+        }
+      ]
+    }
+  }
+]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="SMB-UX-VSP-loginFlow" doc:id="d8744b7e-fdee-4ec7-bf0d-46f9a01df750" name="SMB-UX-VSP-loginFlow" target="Authorization"/>
+		<set-variable value="#[vars.Authorization]" doc:name="Set Variable" doc:id="92cd06ef-7645-4f35-abf6-65adccfba18c" variableName="BearerToken"/>
+		<http:request method="POST" doc:name="Request" doc:id="0e581c9e-fb10-4af1-85f8-c8f44245f8cb" config-ref="HTTP_Request_VSP_configuration" path="/score" target="VSPBusinessScore">
+			<http:body ><![CDATA[#[vars.VSPAplicant]]]></http:body>
+			<http:headers ><![CDATA[#[{
+	"Authorization" : "Bearer " ++ vars.BearerToken
+}]]]></http:headers>
+		</http:request>
+		<ee:transform doc:name="Transform Message" doc:id="7e5b8713-2763-404e-9e49-914de64ddaa8" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="RejectedDecisions" ><![CDATA[%dw 2.0
+output application/json
+---
+if(vars.VSPBusinessScore.decisions.code[0]=="rejected")true else false]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="787b877d-fb84-4d60-8d5a-423af21ca14b" >
+			<when expression="#[vars.RejectedDecisions == true]">
+				<logger level="INFO" doc:name="Logger" doc:id="5039ca7a-2531-4b01-a8e7-baee895e7390" />
+				<flow-ref doc:name="smb-ux-business-loan-sub-flow" doc:id="3152a9c1-c16f-48bb-97ac-1005b260ad3e" name="smb-ux-business-deposit-sub-flow"/>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="860e3ac2-9b61-4f5f-9f61-d8ad47abba98" />
+				<flow-ref doc:name="smb-ux-business-loan-sub-flow" doc:id="2dbc0466-53f6-433e-a6d1-c5d356f53d27" name="smb-ux-business-deposit-sub-flow"/>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="98c69073-4ce0-4ef7-bfe5-181b8b79d251" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+ {"score_result": { 
+ "applicationId": if(payload.items.payload.id[0]== true) payload.items.payload.id[0] else vars.ApplicantInfo.applicationId, 
+ "customerType": vars.ApplicantInfo.customerType,
+ "product": vars.ApplicantInfo.product,
+ "VSPStatus":if(vars.VSPBusinessScore.decisions.code[0]=="passed") "Accepted" else "Rejected"
+ },
+ "metadata":{
+ 	status: 200,
+ 	message: "Success" 
+ }
+ 
+ }]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+</mule>

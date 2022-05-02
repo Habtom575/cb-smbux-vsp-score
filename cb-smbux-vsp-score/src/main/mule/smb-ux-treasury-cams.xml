@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<sub-flow name="smb-ux-treasury-cams-flow" doc:id="abc50666-3197-4c96-8076-4d1889cf09d4" >
+		<logger level="INFO" doc:name="Logger" doc:id="c47304c6-4a8e-4fae-91c6-54bd078e80d4" />
+		<flow-ref doc:name="smb-ux-salesforce-objects-query-subflow" doc:id="34c4d6a8-1d5d-4f55-9bf7-bb6565a8fbf7" name="smb-ux-salesforce-objects-query-subflow"/>
+		<ee:transform doc:name="Transform Message" doc:id="54cab1a7-1c25-43d9-b3e4-d68a7147eee1" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="VSPAplicant" ><![CDATA[%dw 2.0
+output application/json
+import * from dw::core::Strings
+
+var modelCode =
+  if (vars.ApplicantInfo.customerType=="2" and vars.ApplicantInfo.product=="T")  
+    "TreasuryCams" 
+  else if (vars.ApplicantInfo.customerType=="2" and vars.ApplicantInfo.product=="D") 
+    "smbBusiness"
+  else if (vars.ApplicantInfo.customerType=="2" and vars.ApplicantInfo.product=="L" ) 
+     "smbCredit1"
+  else 
+    "smbSigner"
+
+---
+{
+	"RequestDate": now(),
+    "RequestID":vars.ApplicantInfo.applicationId,
+    "PersonID": vars.sfAppPayload.Name_of_Business__c[0],
+    "IP": vars.sfAppPayload.applicant_ip[0] default "",
+    "useBlacklist": false,
+    "Model": modelCode,
+    "ClientID": "1",
+    "Company": {
+      "CompanyName": vars.sfAppPayload.Name_of_Business__c[0],
+      "AlternateCompanyName": vars.sfAppPayload.Altrnate_Business_Name__c[0],
+      "FEIN": vars.sfAppPayload.EIN__c[0],
+      "Phone": vars.sfAppPayload.Business_Phone__c[0],
+      "StreetAddress1": vars.sfAppPayload.Business_Address_1__c[0],
+      "StreetAddress2": vars.sfAppPayload.Business_Address_2__c[0],
+      "City": vars.sfAppPayload.Business_City__c[0],
+      "State": vars.sfAppPayload.Business_State__c[0],
+      "Zip": vars.sfAppPayload.Business_Zip__c[0]
+    }
+  }]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="SMB-UX-VSP-loginFlow" doc:id="f8094141-8f51-4342-8cfe-74ae693de686" name="SMB-UX-VSP-loginFlow" target="Authorization"/>
+		<set-variable value="#[vars.Authorization]" doc:name="Set Variable" doc:id="3f39bc94-1a47-4de6-8d92-db570cec1bdf" variableName="BearerToken"/>
+		<http:request method="POST" doc:name="Request" doc:id="875bc767-4650-47c7-a6b3-0d0a3aa62923" path="/score" config-ref="HTTP_Request_VSP_configuration">
+			<http:body ><![CDATA[#[vars.VSPAplicant]]]></http:body>
+			<http:headers ><![CDATA[#[{
+	"Authorization" : "Bearer " ++ vars.BearerToken
+}]]]></http:headers>
+		</http:request>
+		<ee:transform doc:name="Transform Message" doc:id="4fb4fad7-704c-4c3d-b234-dd4d38d61a94" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="RejectedDecisions" ><![CDATA[%dw 2.0
+output application/json
+---
+if(vars.VSPBusinessScore.decisions.code[0]=="rejected")true else false]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="aa339a33-2b74-478d-88af-c863cc0b631d" >
+			<when expression="#[vars.RejectedDecisions == true]">
+				<logger level="INFO" doc:name="Logger" doc:id="3ff3c969-1fc8-474b-87d3-0d9c0809d70e" />
+				<flow-ref doc:name="Flow Reference" doc:id="aa303ca7-ba44-46d3-96f0-950ac756578b" name="smb-ux-salesforce-objects-create-subflow"/>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="773d68c8-be9c-4a51-977b-8bfaf6770327" />
+				<flow-ref doc:name="Flow Reference" doc:id="14c24871-83f4-409b-b90b-2c0b999821cc" name="smb-ux-salesforce-objects-create-subflow"/>
+			</otherwise>
+		</choice>
+	</sub-flow>
+</mule>

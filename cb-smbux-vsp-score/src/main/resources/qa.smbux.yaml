@@ -3,6 +3,7 @@ SF:
  user: "salesforceadmin@customersbank.com.smbuxqa"
  token: "KAs1LtxzjBgLYx01H4Neg7EQl"
  password: "![j+YMZJzgy4RU0HcwGsh0zZtuq7rocMI5]"
+ vsp_owner: "005o0000000GsbOAAS"
 
 httpListner:
  host: "localhost"

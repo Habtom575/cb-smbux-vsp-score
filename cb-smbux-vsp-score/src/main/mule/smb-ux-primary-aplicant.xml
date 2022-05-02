@@ -80,7 +80,7 @@ var modelCode =
 				<ee:set-variable variableName="RejectedDecisions" ><![CDATA[%dw 2.0
 output application/json
 ---
-if(vars.VSPPrimaryApplScore.decisions.code[0]=="failed")true else false]]></ee:set-variable>
+if(vars.VSPPrimaryApplScore.decisions.code[0]=="rejected")true else false]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<choice doc:name="Choice" doc:id="d6835d7a-7adf-450a-87d2-4aa793949810" >
@@ -109,6 +109,7 @@ if (vars.VSPPrimaryApplScore.decisions.code[0] == (lower("Passed")))
   Profile_Time__c: vars.VSPPrimaryApplScore.vendors.primCamsScore.profileTime,
   Risk_Class__c: vars.VSPPrimaryApplScore.vendors.primCamsScore.riskClass,
   Score__c: vars.VSPPrimaryApplScore.score as String,
+  VSP_ID__c:vars.VSPPrimaryApplScore.vendors.primCamsScore.vspId,
   VSP_URL__c: vars.VSPPrimaryApplScore.vendors.primCamsScore.vspUrl,
   VSP_Model__c: vars.VSPPrimaryApplScore.model,
   VSP_Status_Primary_Applicant__c: if(vars.VSPPrimaryApplScore.decisions.code[0]=="passed") "Accepted" else "Rejected"
@@ -160,6 +161,7 @@ if (vars.VSPPrimaryApplScore.decisions.code[0] == (lower("Passed")))
   Profile_Time__c: vars.VSPPrimaryApplScore.vendors.primCamsScore.profileTime,
   Risk_Class__c: vars.VSPPrimaryApplScore.vendors.primCamsScore.riskClass,
   Score__c: vars.VSPPrimaryApplScore.score as String,
+  VSP_ID__c:vars.VSPPrimaryApplScore.vendors.primCamsScore.vspId,
   VSP_URL__c: vars.VSPPrimaryApplScore.vendors.primCamsScore.vspUrl,
   VSP_Model__c: vars.VSPPrimaryApplScore.model,
   VSP_Status_Primary_Applicant__c: if(vars.VSPPrimaryApplScore.decisions.code[0]=="passed") "Accepted" else "Rejected"

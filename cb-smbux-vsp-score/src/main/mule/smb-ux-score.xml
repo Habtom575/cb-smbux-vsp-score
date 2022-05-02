@@ -42,6 +42,14 @@ vars.ApplicantInfo]]></ee:set-payload>
 				<logger level="INFO" doc:name="Logger" doc:id="8260949a-ee6a-4e7e-a038-b4e3b40c58bb" />
 				<flow-ref doc:name="smb-ux-busines-deposit-flow" doc:id="15728ee9-079e-4ae9-b957-ddbe320fde5f" name="smb-ux-busines-deposit-flow"/>
 			</when>
+			<when expression='#[payload.customerType =="2" and payload.product=="L"]'>
+				<logger level="INFO" doc:name="Logger" doc:id="d8ad2090-00d7-431a-848d-9a6df9862045" />
+				<flow-ref doc:name="smb-ux-business-loan-flow" doc:id="a036c1a9-5490-48af-a9b2-eda158a91f39" name="smb-ux-business-loan-flow"/>
+			</when>
+			<when expression='#[payload.customerType =="2" and payload.product=="T"]'>
+				<logger level="INFO" doc:name="Logger" doc:id="e1c1ae45-4414-4094-a8ae-948e59314677" />
+				<flow-ref doc:name="smb-ux-treasury-cams-flow" doc:id="5d52a544-3fd1-4ca7-99d1-2465b87d2f4c" name="smb-ux-treasury-cams-flow"/>
+			</when>
 			<otherwise >
 				<logger level="INFO" doc:name="Logger" doc:id="c981317f-3b92-46c6-922d-88cd2abca7a8" />
 				<raise-error doc:name="Raise error" doc:id="2f85640a-3314-4899-86c3-f5ed16b1df07" type="VSP:FAILAPPLICANT"/>

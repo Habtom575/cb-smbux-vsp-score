@@ -1,0 +1,32 @@
+SF:   
+  url: https://cs225.salesforce.com/services/Soap/u/52.0
+  user: salesforceadmin@customersbank.com.uat
+  token: " 9cGUvZqFSsJqp1b9nRnP75Ac"
+  vsp_owner: "005o0000000GsbOAAS"
+  sf_case_rec_type: "0121J000001IJejQAG"
+  sf_doc_type: "a1o1J000002tS5cQAE"
+  sf_lr_case_rec_type: "012o0000000yNwQAAU"
+  sf_org_rectype: "0121J000001QMSZQA4"
+  sf_per_rectype: "0121J000001QMSeQAO"
+  sf_trsmng_rec_type: "012o0000000yNwQAAU"
+  hhlo_rec_type: "012o0000000yNvlAAE"
+httpListner:
+ host: "localhost"
+ port: "8091"
+ 
+VSP:
+ url: "api.qa.vspinsight.net"
+ tenantId: "9"
+ tenantSecret: "UjpNXKrFhUju3bzw58KcddXYPW4Xa4SD"
+
+#httpRequest:
+ #url: "devapi.customersbank.com/cb-authentication"
+ #port: "8092"
+
+cb_auth:
+ host: "devapi.customersbank.com"
+ port: "443"
+ base: "/identityprovider/api"
+ path: "login"
+ clientId: "37e993bdc43e453eadcbdc12e146c85c"
+ clientSecret: "a9c84b70A0Cb436AbB21cf97E60904E3"

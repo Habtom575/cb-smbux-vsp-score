@@ -89,21 +89,22 @@ var modelCode =
 		<ee:transform doc:name="Copy_of_Transform Message" doc:id="923d2abf-b1e3-4e70-bde3-39be34280586">
 			<ee:message />
 			<ee:variables>
-				<ee:set-variable variableName="RejectedDecisions"><![CDATA[%dw 2.0
+				<ee:set-variable variableName="RejectedDecisions" ><![CDATA[%dw 2.0
 output application/json
 ---
-if(vars.VSPBusinessScore.decisions.code[0]=="Rejected")true else false]]></ee:set-variable>
-			</ee:variables>
+if(vars.VSPBusinessScore.decisions.code[0]=="rejected")true else false]]></ee:set-variable>
+			
+</ee:variables>
 		</ee:transform>
 		<choice doc:name="Choice" doc:id="13542e21-8c2d-4dab-95c9-88976ed8197e" >
 			<when expression="#[vars.RejectedDecisions == true]">
 				<logger level="INFO" doc:name="Logger" doc:id="57f08c49-4024-4779-b9b9-51de7637fec5" />
-				<flow-ref doc:name="smb-ux-business-debit-sub-flow" doc:id="50a13a31-0ddd-4deb-bf76-8ed59cd97d75" name="smb-ux-business-debit-sub-flow"/>
+				<flow-ref doc:name="smb-ux-business-deposit-sub-flow" doc:id="50a13a31-0ddd-4deb-bf76-8ed59cd97d75" name="smb-ux-business-deposit-sub-flow"/>
 			
 </when>
 			<otherwise >
 				<logger level="INFO" doc:name="Logger" doc:id="a8e8eeb9-0e6b-45e0-a5fd-e28ddb2b49d7" />
-				<flow-ref doc:name="smb-ux-business-debit-sub-flow" doc:id="cd223a22-411d-4d15-8b3a-6429f7c5a01f" name="smb-ux-business-debit-sub-flow"/>
+				<flow-ref doc:name="smb-ux-business-deposit-sub-flow" doc:id="cd223a22-411d-4d15-8b3a-6429f7c5a01f" name="smb-ux-business-deposit-sub-flow"/>
 				<flow-ref doc:name="smb-ux-additional-appliacant-flow" doc:id="99683e20-eda9-404a-ad50-b71d2c75ce1d" name="smb-ux-additional-appliacant-flow" target="upsertAdditAppData"/>
 			
 
@@ -131,7 +132,7 @@ output application/json
 	
 
 </sub-flow>
-	<sub-flow name="smb-ux-business-debit-sub-flow" doc:id="fbad8ca0-b73f-4924-89c0-d08dd81d434a" >
+	<sub-flow name="smb-ux-business-deposit-sub-flow" doc:id="fbad8ca0-b73f-4924-89c0-d08dd81d434a" >
 		<logger level="INFO" doc:name="Logger" doc:id="ac85b34e-850e-4b81-a896-3f089479cb17" />
 		<scatter-gather doc:name="Copy_of_Scatter-Gather" doc:id="b7ba2d31-bb36-4442-a4b6-747d192f3e05" timeout="60000" maxConcurrency="1">
 			<route>
@@ -141,6 +142,13 @@ output application/json
 					<ee:variables>
 						<ee:set-variable variableName="outPayload"><![CDATA[%dw 2.0
 output application/json
+var busDeposit= if(vars.VSPBusinessScore.decisions.code[0]=="passed") "Accepted"
+ else if (vars.VSPBusinessScore.decisions.code[0]=="Document Required") "Document Required" else "Rejected"
+var busLoan= if(vars.VSPBusinessScore.decisions.code[0]=="passed") "Accepted" 
+ else "Rejected"
+var vspModel= if(vars.ApplicantInfo.product=="D" and vars.ApplicantInfo.customerType=="2") vars.VSPBusinessScore.model
+               else "smbCredit1" 
+
 fun decisionProcess ()=
 if (vars.VSPBusinessScore.decisions.code[0] == (lower("Passed"))) 
  "In Progress"
@@ -166,8 +174,9 @@ if (vars.VSPBusinessScore.decisions.code[0] == (lower("Passed")))
   Risk_Class_Business__c:vars.VSPBusinessScore.vendors.primCamsScore.riskClass,
   Score_Business__c: vars.VSPBusinessScore.score as String,
   VSP_URL_Business__c:vars.VSPBusinessScorevendors.primCamsScore.vspUrl,
-  VSP_Model_Business__c:vars.VSPBusinessScore.model,
-  VSP_Status_Business__c: if(vars.VSPBusinessScore.decisions.code[0]=="passed") "Accepted" else "Rejected"
+  VSP_Model_Business__c:vspModel,
+  VSP_Status_Business__c: if(vars.ApplicantInfo.product=="D" and vars.ApplicantInfo.customerType=="2") busDeposit
+               else busLoan 
  }]
  
 ]]></ee:set-variable>
@@ -228,6 +237,13 @@ where Application_Product__c= ':applicationPro' and
 					<ee:variables>
 						<ee:set-variable variableName="outPayload"><![CDATA[%dw 2.0
 output application/json
+var busDeposit= if(vars.VSPBusinessScore.decisions.code[0]=="passed") "Accepted"
+ else if (vars.VSPBusinessScore.decisions.code[0]=="Document Required") "Document Required" else "Rejected"
+var busLoan= if(vars.VSPBusinessScore.decisions.code[0]=="passed") "Accepted" 
+ else "Rejected"
+var vspModel= if(vars.ApplicantInfo.product=="D" and vars.ApplicantInfo.customerType=="2") vars.VSPBusinessScore.model
+               else "smbCredit1" 
+
 fun decisionProcess ()=
 if (vars.VSPBusinessScore.decisions.code[0] == (lower("Passed"))) 
  "In Progress"
@@ -236,9 +252,9 @@ if (vars.VSPBusinessScore.decisions.code[0] == (lower("Passed")))
 ---
  [{
   objectName:"Product_Role__c",
-  //Relationship__c: vars.sfAppPayload.Business_Relationship__c[0],
+  Relationship__c: vars.sfAppPayload.Business_Relationship__c[0],
   //Factors__c: "",
-  //Application_Product__c: vars.SfApplicationProd.Id,
+  Application_Product__c: vars.SfApplicationProd.Id[0],
   Id:vars.currentProductRole.Id[0],
   Decision_Code__c: vars.VSPBusinessScore.decisions.code[0],
   Decision_Description__c: vars.VSPBusinessScore.decisions.description[0],
@@ -247,10 +263,11 @@ if (vars.VSPBusinessScore.decisions.code[0] == (lower("Passed")))
   Profile_Time__c: vars.VSPBusinessScore.vendors.primCamsScore.profileTime,
   Score__c: vars.VSPBusinessScore.score as String,
   VSP_ID__c: vars.VSPBusinessScore.vendors.primCamsScore.vspId,
-  VSP_Model__c:vars.VSPBusinessScore.model,
+  VSP_Model__c:vspModel,
   VSP_URL__c: vars.VSPBusinessScore.vendors.primCamsScore.vspUrl,
   Product_Role_Status__c: decisionProcess(),
-  VSP_Status__c: if(vars.VSPBusinessScore.decisions.code[0]=="passed") "Accepted" else "Rejected"
+  VSP_Status__c: if(vars.ApplicantInfo.product=="D" and vars.ApplicantInfo.customerType=="2") busDeposit
+               else busLoan 
  }]]]></ee:set-variable>
 					</ee:variables>
 				</ee:transform>
@@ -265,11 +282,13 @@ if (vars.VSPBusinessScore.decisions.code[0] == (lower("Passed")))
 					<ee:variables>
 						<ee:set-variable variableName="outPayload"><![CDATA[%dw 2.0
 output application/json
+var vspModel= if(vars.ApplicantInfo.product=="D" and vars.ApplicantInfo.customerType=="2") vars.VSPBusinessScore.model
+               else "smbCredit1" 
 ---
 [{
    "objectName":"VSP_Intergation__c",	
    //"action__c":"",?
-   "Decision_Code__c":vars.VSPBusinessScore.decisions.code[0],
+   "Decision_Code__c": vars.VSPBusinessScore.decisions.code[0],
    "Decision_Description__c":vars.VSPBusinessScore.decisions.description[0],
    //"factors__c":"",
    //"file__c":"",
@@ -281,7 +300,7 @@ output application/json
    "score__c":vars.VSPBusinessScore.score as String,
    //"SystemModstamp":"",
    "VSP_ID__c": vars.VSPBusinessScore.vendors.primCamsScore.vspId,
-   "VSP_Model__c":vars.VSPBusinessScore.model,
+   "VSP_Model__c": vspModel,
    //"VSP_Results__c":if(payload.decisions.code[0]=="passed") "Accepted" else "Rejected",
    "VSP_URL__c": vars.VSPBusinessScore.vendors.primCamsScore.vspUrl
 }]]]></ee:set-variable>

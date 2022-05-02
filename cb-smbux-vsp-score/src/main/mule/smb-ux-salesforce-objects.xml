@@ -108,7 +108,7 @@ vars.UpsertPl]]]></salesforce:records>
 output application/json
 ---
 
-flatten(payload.items[0].payload.errors) map ((item, index) -> {
+flatten(vars.SfUpsertResult.items.payload.errors) map ((item, index) -> {
     "message": item.message,
     "fields": item.fields reduce ($$+$),
     "statusCode": item.statusCode,
@@ -176,7 +176,7 @@ vars.createSc]]]></salesforce:records>
 output application/json
 ---
 
-flatten(payload.items[0].payload.errors) map ((item, index) -> {
+flatten(vars.SfCreateResult.items.payload.errors) map ((item, index) -> {
     "message": item.message,
     "fields": item.fields reduce ($$+$),
     "statusCode": item.statusCode,
@@ -201,7 +201,7 @@ output application/json
  },
  "metadata":{
  	status: 200,
- 	message: if (payload.items.payload.success[0]== true) "Success" else payload.statusCode[0] 
+ 	message: if (vars.SfCreateResult.items.payload.success[0]== true) "Success" else payload.statusCode[0] 
  }
  
  }]]></ee:set-payload>
